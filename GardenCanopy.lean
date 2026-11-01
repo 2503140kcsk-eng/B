@@ -4,6 +4,7 @@ import GardenCanopy.M1Ordinal
 import GardenCanopy.M1Substitution
 import GardenCanopy.M1Semantics
 import GardenCanopy.M1FiniteSum
+import GardenCanopy.M1SubstitutionSemantics
 namespace GardenCanopy
 
 /-- Apply g exactly k times to n. -/
