@@ -362,7 +362,7 @@ theorem sequenceCandidate_encode (xs : List Nat) :
     (List.range ((encodeSequence xs + 1).factorization 2)).map
       (fun i => (encodeSequence xs + 1).factorization (sourcePrime (i + 1))) = xs
   rw [encodeSequence_factorization_two]
-  apply List.ext_get
+  apply List.ext_getElem
   · simp
   · intro i hiRange hiXs
     simp only [List.getElem_map, List.getElem_range]
