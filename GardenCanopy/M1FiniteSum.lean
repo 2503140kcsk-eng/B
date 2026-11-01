@@ -4,38 +4,41 @@ public import Mathlib.Data.Set.Finite.Lattice
 
 public section
 
+open scoped BigOperators
+
 namespace GardenCanopy.M1FiniteSum
 
 universe u v
 
-variable {D : Type u} {P : Type v}
+variable {D : Nat → Type u} {P : Type v}
 
 /--
 The natural indices witnessed by a pair (i,p), but only when (i,p) uniquely
-defines some domain element. The outer existential unique condition mirrors
-the source's IsDefinition(P); if uniqueness fails, this set is empty.
+defines some element of the model at index i. The domain may vary with i,
+matching the source family U(CNF(i)).
 -/
 def pairParameterFiber
-    (parameter : Nat → D) (defines : Nat → P → D → Prop)
+    (parameter : (i : Nat) → Nat → D i)
+    (defines : (i : Nat) → P → D i → Prop)
     (i : Nat) (p : P) : Set Nat :=
-  {m | (∃! d : D, defines i p d) ∧
-    ∃ d : D, defines i p d ∧ parameter m = d}
+  {m | (∃! d : D i, defines i p d) ∧
+    ∃ d : D i, defines i p d ∧ parameter i m = d}
 
 /--
 For a fixed pair (i,p), all qualifying natural indices lie in the one
-parameter fiber of the uniquely defined domain element.
+parameter fiber of the uniquely defined element in the i-th model.
 -/
 theorem pairParameterFiber_finite
-    (parameter : Nat → D) (defines : Nat → P → D → Prop)
-    (hFiber : ∀ d : D, ({m : Nat | parameter m = d} : Set Nat).Finite)
+    (parameter : (i : Nat) → Nat → D i)
+    (defines : (i : Nat) → P → D i → Prop)
+    (hFiber : ∀ i (d : D i),
+      ({m : Nat | parameter i m = d} : Set Nat).Finite)
     (i : Nat) (p : P) :
     (pairParameterFiber parameter defines i p).Finite := by
   by_cases hNonempty : ∃ m, m ∈ pairParameterFiber parameter defines i p
   · obtain ⟨m₀, hm₀⟩ := hNonempty
-    rcases hm₀ with ⟨⟨d₀, hd₀, hUnique₀⟩, d₁, hd₁, hParam₀⟩
-    have h₁ : d₁ = d₀ := hUnique₀ d₁ hd₁
-    have hParam₀' : parameter m₀ = d₀ := hParam₀.trans h₁
-    apply (hFiber d₀).subset
+    rcases hm₀ with ⟨⟨d₀, hd₀, hUnique₀⟩, _d₁, _hd₁, _hParam₀⟩
+    apply (hFiber i d₀).subset
     intro m hm
     rcases hm with ⟨⟨d, hd, hUnique⟩, d', hd', hParam⟩
     have h₂ : d' = d := hUnique d' hd'
@@ -53,20 +56,23 @@ The set of all natural parameter indices witnessed by finitely many indices i<n
 and by formulae in the finite code set codes.
 -/
 def boundedCandidateSet
-    (parameter : Nat → D) (defines : Nat → P → D → Prop)
+    (parameter : (i : Nat) → Nat → D i)
+    (defines : (i : Nat) → P → D i → Prop)
     (n : Nat) (codes : Finset P) : Set Nat :=
   ⋃ i ∈ (Finset.range n : Set Nat),
     ⋃ p ∈ (codes : Set P), pairParameterFiber parameter defines i p
 
 /--
-Finite-sum support theorem: a finite range of indices and a finite set of
-formula codes, together with finite parameter fibers, imply that the set of
-qualifying natural indices is finite. Uniqueness is already part of
-pairParameterFiber; formulas that do not uniquely define an element add no m.
+Finite-sum support theorem: a finite range of model indices and a finite set
+of formula codes, together with finite parameter fibers in each model, imply
+that the set of qualifying natural indices is finite. Non-unique formulas
+contribute no indices.
 -/
 theorem boundedCandidateSet_finite
-    (parameter : Nat → D) (defines : Nat → P → D → Prop)
-    (hFiber : ∀ d : D, ({m : Nat | parameter m = d} : Set Nat).Finite)
+    (parameter : (i : Nat) → Nat → D i)
+    (defines : (i : Nat) → P → D i → Prop)
+    (hFiber : ∀ i (d : D i),
+      ({m : Nat | parameter i m = d} : Set Nat).Finite)
     (n : Nat) (codes : Finset P) :
     (boundedCandidateSet parameter defines n codes).Finite := by
   unfold boundedCandidateSet
@@ -76,24 +82,25 @@ theorem boundedCandidateSet_finite
   intro p hp
   exact pairParameterFiber_finite parameter defines hFiber i p
 
-/-- Injectivity of the natural parameter map makes all parameter fibers finite. -/
+/-- Injectivity of each model's parameter map makes all its fibers finite. -/
 theorem parameterFiber_finite_of_injective
-    (parameter : Nat → D) (hInjective : Function.Injective parameter)
-    (d : D) :
-    {m : Nat | parameter m = d}.Finite := by
-  by_cases h : ∃ m, parameter m = d
+    (parameter : (i : Nat) → Nat → D i)
+    (hInjective : ∀ i, Function.Injective (parameter i))
+    (i : Nat) (d : D i) :
+    {m : Nat | parameter i m = d}.Finite := by
+  by_cases h : ∃ m, parameter i m = d
   · obtain ⟨m₀, hm₀⟩ := h
-    have heq : {m : Nat | parameter m = d} = {m₀} := by
+    have heq : {m : Nat | parameter i m = d} = {m₀} := by
       ext m
       simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff]
       constructor
       · intro hm
-        exact hInjective (hm.trans hm₀.symm)
+        exact hInjective i (hm.trans hm₀.symm)
       · rintro rfl
         exact hm₀
     rw [heq]
     exact Set.finite_singleton m₀
-  · have heq : {m : Nat | parameter m = d} = ∅ := by
+  · have heq : {m : Nat | parameter i m = d} = ∅ := by
       ext m
       simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
       exact fun hm => h ⟨m, hm⟩
@@ -101,17 +108,18 @@ theorem parameterFiber_finite_of_injective
     exact Set.finite_empty
 
 /--
-Injective parameter interpretations are a sufficient, but not necessary,
-condition for the finite candidate-set theorem.
+Injective parameter interpretations in every model are sufficient, but not
+necessary, for the bounded candidate-set finiteness theorem.
 -/
 theorem boundedCandidateSet_finite_of_injective
-    (parameter : Nat → D) (hInjective : Function.Injective parameter)
-    (defines : Nat → P → D → Prop)
+    (parameter : (i : Nat) → Nat → D i)
+    (hInjective : ∀ i, Function.Injective (parameter i))
+    (defines : (i : Nat) → P → D i → Prop)
     (n : Nat) (codes : Finset P) :
     (boundedCandidateSet parameter defines n codes).Finite := by
   apply boundedCandidateSet_finite parameter defines
-  intro d
-  exact parameterFiber_finite_of_injective parameter hInjective d
+  intro i d
+  exact parameterFiber_finite_of_injective parameter hInjective i d
 
 /--
 A finite sum over a set is implemented through its canonical Finset.
@@ -123,8 +131,10 @@ noncomputable def finiteNaturalSum (s : Set Nat) (hs : s.Finite) : Nat :=
 
 /-- Conditional model-relative finite sum over the qualifying parameter indices. -/
 noncomputable def boundedCandidateSum
-    (parameter : Nat → D) (defines : Nat → P → D → Prop)
-    (hFiber : ∀ d : D, ({m : Nat | parameter m = d} : Set Nat).Finite)
+    (parameter : (i : Nat) → Nat → D i)
+    (defines : (i : Nat) → P → D i → Prop)
+    (hFiber : ∀ i (d : D i),
+      ({m : Nat | parameter i m = d} : Set Nat).Finite)
     (n : Nat) (codes : Finset P) : Nat :=
   finiteNaturalSum
     (boundedCandidateSet parameter defines n codes)
