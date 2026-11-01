@@ -90,34 +90,34 @@ The freshness index is exactly the least index absent from the current formula,
 the replacement term, and the target variable, as prescribed by the source.
 -/
 noncomputable def substituteFormulaAux (x : Nat) (replacement : Term)
-    (forbidden : Finset Nat) (rho : Nat → Nat) (active : Bool)
+    (freshUsed : Finset Nat) (rho : Nat → Nat) (active : Bool)
     (P : Formula) : Formula :=
   match P with
   | .falsum => .falsum
   | .implication A B =>
       .implication
-        (substituteFormulaAux x replacement forbidden rho active A)
-        (substituteFormulaAux x replacement forbidden rho active B)
+        (substituteFormulaAux x replacement freshUsed rho active A)
+        (substituteFormulaAux x replacement freshUsed rho active B)
   | .negation A =>
-      .negation (substituteFormulaAux x replacement forbidden rho active A)
+      .negation (substituteFormulaAux x replacement freshUsed rho active A)
   | .existsQuantifier i A =>
       if active then
         if i = x then
           .existsQuantifier i
-            (substituteFormulaAux x replacement forbidden
+            (substituteFormulaAux x replacement freshUsed
               (Function.update rho i i) false A)
         else if i ∈ termVars replacement then
-          let z := newVar forbidden
+          let z := newVar (formulaVars P ∪ termVars replacement ∪ {x} ∪ freshUsed)
           .existsQuantifier z
-            (substituteFormulaAux x replacement (insert z forbidden)
+            (substituteFormulaAux x replacement (insert z freshUsed)
               (Function.update rho i z) true A)
         else
           .existsQuantifier i
-            (substituteFormulaAux x replacement forbidden
+            (substituteFormulaAux x replacement freshUsed
               (Function.update rho i i) true A)
       else
         .existsQuantifier i
-          (substituteFormulaAux x replacement forbidden
+          (substituteFormulaAux x replacement freshUsed
             (Function.update rho i i) false A)
   | .relation r args =>
       .relation r (substituteTermsAux x replacement rho active args)
@@ -129,8 +129,7 @@ decreasing_by
 
 /-- Source-style one-variable capture-avoiding substitution. -/
 noncomputable def substituteFormula (P : Formula) (replacement : Term) (x : Nat) : Formula :=
-  substituteFormulaAux x replacement
-    (formulaVars P ∪ termVars replacement ∪ {x}) id true P
+  substituteFormulaAux x replacement ∅ id true P
 
 /-- The least fresh variable for a formula is absent from its variable indices. -/
 theorem newVar_avoids_formula (P : Formula) (t : Term) (x : Nat) :
