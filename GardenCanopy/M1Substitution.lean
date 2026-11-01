@@ -27,41 +27,45 @@ theorem newVar_minimal (s : Finset Nat) (n : Nat) (hn : n ∉ s) :
     newVar s ≤ n :=
   Nat.find_min' (newVarExists s) hn
 
-/-- Every variable index occurring in a term, including indices in nested arguments. -/
+/- Every variable index occurring in a term, including indices in nested arguments. -/
 mutual
-  def termVars : Term → Finset Nat
+  def termVars (t : Term) : Finset Nat :=
+    match t with
     | .variable i => {i}
     | .constant _ => ∅
     | .app _ args => termsVars args
-  termination_by sizeOf t
+  termination_by t => sizeOf t
   decreasing_by
     simp_wf
     omega
 
-  def termsVars : List Term → Finset Nat
+  def termsVars (ts : List Term) : Finset Nat :=
+    match ts with
     | [] => ∅
-    | t :: ts => termVars t ∪ termsVars ts
-  termination_by sizeOf ts
+    | t :: rest => termVars t ∪ termsVars rest
+  termination_by ts => sizeOf ts
   decreasing_by
     simp_wf
     omega
 end
 
-/-- Shape-only size of a term, ignoring the numerical values of variable names. -/
+/- Shape-only size of a term, ignoring the numerical values of variable names. -/
 mutual
-  def termNodes : Term → Nat
+  def termNodes (t : Term) : Nat :=
+    match t with
     | .variable _ => 1
     | .constant _ => 1
     | .app _ args => 1 + termsNodes args
-  termination_by sizeOf t
+  termination_by t => sizeOf t
   decreasing_by
     simp_wf
     omega
 
-  def termsNodes : List Term → Nat
+  def termsNodes (ts : List Term) : Nat :=
+    match ts with
     | [] => 0
-    | t :: ts => termNodes t + termsNodes ts
-  termination_by sizeOf ts
+    | t :: rest => termNodes t + termsNodes rest
+  termination_by ts => sizeOf ts
   decreasing_by
     simp_wf
     omega
@@ -83,21 +87,25 @@ def formulaNodes : Formula → Nat
   | .existsQuantifier _ A => 1 + formulaNodes A
   | .relation _ args => 1 + termsNodes args
 
-/-- Capture-safe renaming/substitution of one variable in a term. -/
+/- Capture-safe renaming/substitution of one variable in a term. -/
 mutual
   def substituteTermAux (x : Nat) (replacement : Term)
-      (rho : Nat → Nat) (active : Bool) : Term → Term
+      (rho : Nat → Nat) (active : Bool) (t : Term) : Term :=
+    match t with
     | .variable i =>
         if active && decide (i = x) then replacement else .variable (rho i)
     | .constant i => .constant i
     | .app f args => .app f (substituteTermsAux x replacement rho active args)
+  termination_by t => sizeOf t
 
   def substituteTermsAux (x : Nat) (replacement : Term)
-      (rho : Nat → Nat) (active : Bool) : List Term → List Term
+      (rho : Nat → Nat) (active : Bool) (ts : List Term) : List Term :=
+    match ts with
     | [] => []
-    | t :: ts =>
+    | t :: rest =>
         substituteTermAux x replacement rho active t ::
-          substituteTermsAux x replacement rho active ts
+          substituteTermsAux x replacement rho active rest
+  termination_by ts => sizeOf ts
 end
 termination_by
   substituteTermAux _ _ _ _ t => sizeOf t
@@ -173,6 +181,7 @@ theorem initialNew_ne_target (P : Formula) (t : Term) (x : Nat) :
   have h := newVar_not_mem (formulaVars P ∪ termVars t ∪ {x})
   intro heq
   apply h
-  simp [heq]
+  rw [heq]
+  exact Finset.mem_union_right _ (Finset.mem_singleton_self x)
 
 end GardenCanopy.M1Substitution
