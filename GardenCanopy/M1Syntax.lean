@@ -31,9 +31,14 @@ theorem sourcePrime_strictMono : StrictMono sourcePrime := by
 @[simp] theorem sourcePrime_three : sourcePrime 3 = 7 := by
   simp [sourcePrime]
 
+/-- Auxiliary structural recursion for the prime-power payload. -/
+noncomputable def sequencePayloadAux (i : Nat) : List Nat → Nat
+  | [] => 1
+  | a :: xs => sourcePrime (i + 1) ^ a * sequencePayloadAux (i + 1) xs
+
 /-- Product of the prime powers in the source's finite-sequence code. -/
 noncomputable def sequencePayload (xs : List Nat) : Nat :=
-  ∏ i ∈ Finset.range xs.length, sourcePrime (i + 1) ^ xs.getD i 0
+  sequencePayloadAux 0 xs
 
 /--
 The exact finite-sequence Gödel code from the primary source:
@@ -167,23 +172,32 @@ def Formula.hasCorrectRootArity : Formula → Prop
   | .existsQuantifier _ _ => True
   | .relation r args => args.length = r.arity
 
-def Term.containsTheta : Term → Bool
-  | .variable _ => false
-  | .constant _ => false
-  | .app .theta _ => true
-  | .app .unaryU args => args.any Term.containsTheta
-  | .app (.generic _ _) args => args.any Term.containsTheta
+/--
+Inductive detection of Θ in a term. This avoids a non-structural recursive
+traversal through a nested List inside the term datatype.
+-/
+inductive Term.HasTheta : Term → Prop where
+  | root {args : List Term} : Term.HasTheta (.app .theta args)
+  | argument {f : FunctionSymbol} {args : List Term} {t : Term}
+      (ht : t ∈ args) (h : Term.HasTheta t) : Term.HasTheta (.app f args)
 
-def Formula.containsTheta : Formula → Bool
-  | .falsum => false
-  | .implication A B => Formula.containsTheta A || Formula.containsTheta B
-  | .negation A => Formula.containsTheta A
-  | .existsQuantifier _ A => Formula.containsTheta A
-  | .relation _ args => args.any Term.containsTheta
+/-- Inductive detection of Θ in a formula. -/
+inductive Formula.HasTheta : Formula → Prop where
+  | implicationLeft {A B : Formula} (h : Formula.HasTheta A) :
+      Formula.HasTheta (.implication A B)
+  | implicationRight {A B : Formula} (h : Formula.HasTheta B) :
+      Formula.HasTheta (.implication A B)
+  | negation {A : Formula} (h : Formula.HasTheta A) :
+      Formula.HasTheta (.negation A)
+  | existsQuantifier {i : Nat} {A : Formula} (h : Formula.HasTheta A) :
+      Formula.HasTheta (.existsQuantifier i A)
+  | relationArgument {r : RelationSymbol} {args : List Term} {t : Term}
+      (ht : t ∈ args) (h : Term.HasTheta t) :
+      Formula.HasTheta (.relation r args)
 
 /-- The source's Henkin-scheme fragment: formulas not containing Θ. -/
 def FormulaWithoutTheta (P : Formula) : Prop :=
-  Formula.containsTheta P = false
+  ¬ Formula.HasTheta P
 
 /-! ## Hand-checkable code vectors from the source definition -/
 
