@@ -159,4 +159,22 @@ def Formula.containsTheta : Formula → Bool
 def FormulaWithoutTheta (P : Formula) : Prop :=
   Formula.containsTheta P = false
 
+
+/-! ## Hand-checkable code vectors from the source definition -/
+
+example : encodeSequence [] = 0 := by
+  simp [encodeSequence, sequencePayload]
+
+example : encodeSequence [0] = 1 := by
+  simp [encodeSequence, sequencePayload, sourcePrime]
+
+example : encodeSequence [1] = 5 := by
+  simp [encodeSequence, sequencePayload, sourcePrime]
+
+example : encodeSequence [0, 1] = 19 := by
+  simp [encodeSequence, sequencePayload, sourcePrime]
+
+example : encodeSequence [3, 2, 5] = 2 ^ 3 * 3 ^ 3 * 5 ^ 2 * 7 ^ 5 - 1 := by
+  simp [encodeSequence, sequencePayload, sourcePrime]
+
 end GardenCanopy.M1Syntax
