@@ -306,7 +306,6 @@ theorem singletonR10_parameter_definable {D : Type u} (M : Expansion D)
   · exact singletonR10_defines_exactly M d
   · intro σ
     rw [singletonR10_satisfies_iff]
-    simpa [singletonR10Relation, hParam]
 
 /-- With the same fixed parameter map, the empty relation makes no m definable by this P. -/
 theorem emptyR10_not_parameter_definable {D : Type u} (M : Expansion D)
