@@ -58,10 +58,13 @@ This repository is a fresh research project. The files currently describe a prop
 - [ ] Add an independent type checker (e.g. nanoda) as a second verification route.
 
 ### M1 — Freeze the source definition
-- Obtain the original author post and archive its exact revision/date.
-- Define the syntax tree and Gödel coding without prose-level ambiguities.
-- Fix the natural-number coding of variables, symbols, finite lists, formulae, substitution, and MetaCode.
-- Reconcile all secondary-page discrepancies from the primary source only.
+- [x] Identify the original author post and record original revision 19450 (2019-12-03) and corrected author revision 61601 (2023-10-19).
+- [x] Transcribe the source symbol assignments, prime-factor sequence code, substitution freshness rule, Henkin scheme, U1/U2/U3, CNF recursion, and f's existentially witnessed distinct-value sum into M1_SOURCE_AUDIT.md.
+- [x] Record the rule that each qualifying value m is counted once, regardless of the number of (i,P) witnesses.
+- [ ] Save a permitted byte-level archival snapshot and record its SHA-256; the revision-history IDs and immutable MediaWiki permalinks are pinned, but this repository does not yet contain the page bytes.
+- [ ] Resolve semantic gates A-C in M1_SOURCE_AUDIT.md before claiming the source determines a unique external f.
+- [ ] Define the syntax tree and prove the serializer/parser correspondence to the source token strings.
+- [ ] Prove the exact Gödel coding round trips and reconcile every remaining secondary-page discrepancy from the primary source only.
 
 ### M2 — Formalize the arithmetic and syntax
 - Define formula syntax as a Lean inductive type.
