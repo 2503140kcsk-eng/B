@@ -5,6 +5,8 @@ import Mathlib.Data.Nat.PrimeFin
 import Mathlib.Data.Nat.Factorization.Basic
 import Mathlib.Tactic
 
+public section
+
 open scoped BigOperators
 
 namespace GardenCanopy.M1Syntax
