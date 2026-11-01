@@ -227,7 +227,7 @@ example : encodeSequence [3, 2, 5] =
 /-! ## Prime-factorization proof of the sequence-code round trip -/
 
 /-- The Finsupp exponent vector encoded by the tail of a source sequence. -/
-def sequenceFactorization (i : Nat) : List Nat → (Nat →₀ Nat)
+noncomputable def sequenceFactorization (i : Nat) : List Nat → (Nat →₀ Nat)
   | [] => 0
   | a :: xs =>
       Finsupp.single (sourcePrime (i + 1)) a +
@@ -331,7 +331,6 @@ theorem encodeSequence_factorization (xs : List Nat) :
   rw [Nat.factorization_mul hpow hpayload]
   rw [Nat.Prime.factorization_pow (by norm_num : Nat.Prime 2)]
   rw [sequencePayload_factorization]
-  rfl
 
 theorem encodeSequence_factorization_two (xs : List Nat) :
     (encodeSequence xs + 1).factorization 2 = xs.length := by
@@ -358,7 +357,7 @@ theorem encodeSequence_factorization_prime
 /-- Encoding followed by candidate decoding recovers the original list. -/
 theorem sequenceCandidate_encode (xs : List Nat) :
     sequenceCandidate (encodeSequence xs) = xs := by
-  unfold sequenceCandidate
+  dsimp [sequenceCandidate]
   rw [encodeSequence_factorization_two]
   apply List.ext_get
   · simp
@@ -390,8 +389,7 @@ theorem decodeSequence_eq_none_iff (n : Nat) :
     cases hd : decodeSequence n with
     | none => rfl
     | some xs =>
-        apply h
-        exact ⟨xs, decodeSequence_sound hd⟩
+        exact (h ⟨xs, decodeSequence_sound hd⟩).elim
 
 
 end GardenCanopy.M1Syntax
