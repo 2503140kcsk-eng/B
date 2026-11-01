@@ -231,7 +231,7 @@ theorem parameterFiber_finite_of_injective {D : Type u}
   · obtain ⟨m₀, hm₀⟩ := h
     have heq : {m : Nat | constants m = d} = {m₀} := by
       ext m
-      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff]
       constructor
       · intro hm
         exact hInjective (hm.trans hm₀.symm)
@@ -241,7 +241,7 @@ theorem parameterFiber_finite_of_injective {D : Type u}
     exact Set.finite_singleton m₀
   · have heq : {m : Nat | constants m = d} = ∅ := by
       ext m
-      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+      simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
       exact fun hm => h ⟨m, hm⟩
     rw [heq]
     exact Set.finite_empty
