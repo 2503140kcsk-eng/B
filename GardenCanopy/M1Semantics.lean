@@ -1,18 +1,18 @@
 module
 
 import GardenCanopy.M1Syntax
+import Mathlib.Data.Set.Lattice
 
 namespace GardenCanopy.M1Semantics
 
 universe u
 
-/--
-An expansion of the source language on a carrier D.
+open GardenCanopy.M1Syntax
 
-The fields constants, genericFunction, and genericRelation interpret c_i,
-f_(a,i), and r_(a,i), respectively. No injectivity, distinctness,
-definability, or invariance condition is imposed on these maps.
-Membership, U, and Θ are interpreted separately.
+/--
+An expansion of the source language on a carrier D. The interpretations of
+c_i, f_(a,i), and r_(a,i) are independent functions with no injectivity
+or invariance hypotheses.
 -/
 structure Expansion (D : Type u) where
   defaultElement : D
@@ -23,61 +23,83 @@ structure Expansion (D : Type u) where
   unaryU : D → D
   theta : D → D
 
-open GardenCanopy.M1Syntax
+/-- Update one variable while leaving all other variables unchanged. -/
+def assignmentUpdate {D : Type u} (σ : Nat → D) (i : Nat) (d : D) : Nat → D :=
+  fun j => if j = i then d else σ j
+
+@[simp] theorem assignmentUpdate_same {D : Type u} [DecidableEq Nat]
+    (σ : Nat → D) (i : Nat) (d : D) :
+    assignmentUpdate σ i d i = d := by
+  simp [assignmentUpdate]
+
+@[simp] theorem assignmentUpdate_other {D : Type u} [DecidableEq Nat]
+    (σ : Nat → D) (i j : Nat) (d : D) (h : j ≠ i) :
+    assignmentUpdate σ i d j = σ j := by
+  simp [assignmentUpdate, h.symm]
 
 def functionInterpretation {D : Type u} (M : Expansion D) :
-    FunctionSymbol → List D → D
-  | .unaryU, [x] => M.unaryU x
-  | .theta, [x] => M.theta x
-  | .generic arity index, args => M.genericFunction arity index args
+    GardenCanopy.M1Syntax.FunctionSymbol → List D → D
+  | GardenCanopy.M1Syntax.FunctionSymbol.unaryU, [x] => M.unaryU x
+  | GardenCanopy.M1Syntax.FunctionSymbol.theta, [x] => M.theta x
+  | GardenCanopy.M1Syntax.FunctionSymbol.generic arity index, args =>
+      M.genericFunction arity index args
   | _, _ => M.defaultElement
 
 def relationInterpretation {D : Type u} (M : Expansion D) :
-    RelationSymbol → List D → Prop
-  | .membership, [x, y] => M.membership x y
-  | .generic arity index, args => M.genericRelation arity index args
+    GardenCanopy.M1Syntax.RelationSymbol → List D → Prop
+  | GardenCanopy.M1Syntax.RelationSymbol.membership, [x, y] => M.membership x y
+  | GardenCanopy.M1Syntax.RelationSymbol.generic arity index, args =>
+      M.genericRelation arity index args
   | _, _ => False
 
 mutual
-  /-- A term evaluates relative to a structure and a variable assignment. -/
   inductive TermEval {D : Type u} (M : Expansion D) (σ : Nat → D) :
-      Term → D → Prop where
-    | variable (i : Nat) : TermEval M σ (.variable i) (σ i)
-    | constant (i : Nat) : TermEval M σ (.constant i) (M.constants i)
-    | app {f : FunctionSymbol} {args : List Term} {values : List D}
+      GardenCanopy.M1Syntax.Term → D → Prop where
+    | variable (i : Nat) :
+        TermEval M σ (GardenCanopy.M1Syntax.Term.variable i) (σ i)
+    | constant (i : Nat) :
+        TermEval M σ (GardenCanopy.M1Syntax.Term.constant i) (M.constants i)
+    | app {f : GardenCanopy.M1Syntax.FunctionSymbol}
+        {args : List GardenCanopy.M1Syntax.Term} {values : List D}
         (h : TermsEval M σ args values) :
-        TermEval M σ (.app f args) (functionInterpretation M f values)
+        TermEval M σ (GardenCanopy.M1Syntax.Term.app f args)
+          (functionInterpretation M f values)
 
-  /-- Pointwise evaluation of an argument list. -/
   inductive TermsEval {D : Type u} (M : Expansion D) (σ : Nat → D) :
-      List Term → List D → Prop where
+      List GardenCanopy.M1Syntax.Term → List D → Prop where
     | nil : TermsEval M σ [] []
-    | cons {t : Term} {ts : List Term} {x : D} {xs : List D}
+    | cons {t : GardenCanopy.M1Syntax.Term}
+        {ts : List GardenCanopy.M1Syntax.Term} {x : D} {xs : List D}
         (ht : TermEval M σ t x) (hs : TermsEval M σ ts xs) :
         TermsEval M σ (t :: ts) (x :: xs)
 end
 
-/-- Tarskian satisfaction for the source's primitive formula constructors. -/
+/-- Tarskian satisfaction, relative to an expansion and variable assignment. -/
 inductive Satisfies {D : Type u} (M : Expansion D) :
-    (Nat → D) → Formula → Prop where
-  | implication {σ : Nat → D} {A B : Formula}
+    (Nat → D) → GardenCanopy.M1Syntax.Formula → Prop where
+  | falsum (σ : Nat → D) :
+      Satisfies M σ GardenCanopy.M1Syntax.Formula.falsum → False
+  | implication {σ : Nat → D} {A B : GardenCanopy.M1Syntax.Formula}
       (h : Satisfies M σ A → Satisfies M σ B) :
-      Satisfies M σ (.implication A B)
-  | negation {σ : Nat → D} {A : Formula}
+      Satisfies M σ (GardenCanopy.M1Syntax.Formula.implication A B)
+  | negation {σ : Nat → D} {A : GardenCanopy.M1Syntax.Formula}
       (h : Satisfies M σ A → False) :
-      Satisfies M σ (.negation A)
-  | existsQuantifier {σ : Nat → D} {i : Nat} {A : Formula}
-      (h : ∃ d : D, Satisfies M (Function.update σ i d) A) :
-      Satisfies M σ (.existsQuantifier i A)
-  | relation {σ : Nat → D} {r : RelationSymbol}
-      {args : List Term} {values : List D}
+      Satisfies M σ (GardenCanopy.M1Syntax.Formula.negation A)
+  | existsQuantifier {σ : Nat → D} {i : Nat}
+      {A : GardenCanopy.M1Syntax.Formula}
+      (h : ∃ d : D, Satisfies M (assignmentUpdate σ i d) A) :
+      Satisfies M σ (GardenCanopy.M1Syntax.Formula.existsQuantifier i A)
+  | relation {σ : Nat → D} {r : GardenCanopy.M1Syntax.RelationSymbol}
+      {args : List GardenCanopy.M1Syntax.Term} {values : List D}
       (heval : TermsEval M σ args values)
       (hrel : relationInterpretation M r values) :
-      Satisfies M σ (.relation r args)
+      Satisfies M σ (GardenCanopy.M1Syntax.Formula.relation r args)
 
 /-- The source-language atomic formula r_(1,0)(x₀). -/
-def r10Formula : Formula :=
-  .relation (.generic 1 0) [.variable 0]
+def r10Formula : GardenCanopy.M1Syntax.Formula :=
+  GardenCanopy.M1Syntax.Formula.relation
+    (GardenCanopy.M1Syntax.RelationSymbol.generic 1 0)
+    [GardenCanopy.M1Syntax.Term.variable 0]
 
 theorem satisfies_r10_iff {D : Type u} (M : Expansion D)
     (σ : Nat → D) :
@@ -96,9 +118,9 @@ theorem satisfies_r10_iff {D : Type u} (M : Expansion D)
       (TermsEval.cons (TermEval.variable 0) TermsEval.nil) hrel
 
 /--
-A legal arbitrary interpretation in which every parameter constant c_i denotes d,
-every generic function is the constant function d, and r_(1,0) denotes the
-singleton predicate {d}. All other generic relations are empty.
+A permitted arbitrary expansion in which every parameter c_i denotes d,
+every generic function returns d, and r_(1,0) has extension {d}.
+All other generic relations are empty.
 -/
 def collapsedExpansion {D : Type u} [Nonempty D] (d : D) : Expansion D where
   defaultElement := d
@@ -119,17 +141,15 @@ theorem collapsed_satisfies_r10_iff {D : Type u} [Nonempty D] (d : D)
     Satisfies (collapsedExpansion d) σ r10Formula ↔ σ 0 = d := by
   rw [satisfies_r10_iff, collapsed_r10_iff]
 
-/--
-DefinesExactly M P means P has exactly one satisfying value of x₀,
-independently of the values assigned to the other variables.
--/
-def DefinesExactly {D : Type u} (M : Expansion D) (P : Formula) : Prop :=
-  ∃! d : D, ∀ σ : Nat → D, Satisfies M σ P ↔ σ 0 = d
+/-- A formula uniquely defines d if every assignment satisfies it exactly at d. -/
+def DefinesExactly {D : Type u} (M : Expansion D)
+    (P : GardenCanopy.M1Syntax.Formula) : Prop :=
+  ExistsUnique (fun d : D =>
+    ∀ σ : Nat → D, Satisfies M σ P ↔ σ 0 = d)
 
 /--
-A value m is defined by the formula r_(1,0)(x₀) when that formula defines
-exactly one object and the parameter constant c_m denotes that object.
-This is the semantic core of Definable(m,i,P), with i=0 and one fixed P.
+The m-th parameter c_m denotes the unique object defined by r_(1,0)(x₀).
+This is the semantic core of Definable for i=0 and this fixed formula.
 -/
 def ParameterDefinable {D : Type u} (M : Expansion D) (m : Nat) : Prop :=
   DefinesExactly M r10Formula ∧
@@ -155,7 +175,7 @@ theorem collapsed_all_parameters_definable {D : Type u} [Nonempty D] (d : D) :
     rw [collapsed_satisfies_r10_iff]
     simp [collapsedExpansion]
 
-/-- The values m witnessed by this one fixed (i,P) pair. -/
+/-- Natural indices witnessed by this one fixed formula and model. -/
 def fixedWitnessValues {D : Type u} (M : Expansion D) : Set Nat :=
   {m | ParameterDefinable M m}
 
@@ -170,9 +190,8 @@ theorem collapsed_fixedWitnessValues_infinite {D : Type u} [Nonempty D] (d : D) 
   exact Set.infinite_univ
 
 /--
-If the natural-code bound q and index i=0 are admitted, the same single
-witness pair already contributes every m to the source's candidate set.
-The set is infinite, so it cannot be the finite domain of a natural-number sum.
+If n and q satisfy the source's finite code bounds, the same fixed witness
+still makes every natural m definable in this arbitrary expansion.
 -/
 def boundedFixedWitnessValues {D : Type u} (M : Expansion D)
     (n q : Nat) : Set Nat :=
@@ -193,11 +212,7 @@ theorem collapsed_boundedFixedWitnessValues_infinite
   rw [collapsed_boundedFixedWitnessValues_eq_univ d hn hq]
   exact Set.infinite_univ
 
-/--
-A necessary condition for the source finite-sum argument:
-if a single formula uniquely defines d, then the preimage of d under the
-parameter-constant map must be finite. Injectivity of constants is sufficient.
--/
+/-- Injectivity of the parameter map makes every parameter fiber finite. -/
 theorem parameterFiber_finite_of_injective {D : Type u}
     (constants : Nat → D) (hInjective : Function.Injective constants)
     (d : D) :
