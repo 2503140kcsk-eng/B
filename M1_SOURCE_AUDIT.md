@@ -220,6 +220,10 @@ The source transcription exposes three points that must be answered before claim
 
 The author says c_i,f_{a,i},r_{a,i} have no intended meaning, but Formula is built from the full Symbol and Definable ranges over all Formula. A model of a language with extra constants/functions/relations must interpret them. Unless a theorem shows that their interpretations cannot change the set S_n, or the source proves an equivalent reduced-language definition, their arbitrary interpretations may affect formula satisfaction and therefore Definable.
 
+**Concrete sensitivity test (conditional obstruction):** take i=0 and the one-free-variable formula P(x₀)=r_{1,0}(x₀), with fixed code q=MetaCode(P). For any n>q, the source conditions i<n and q<n hold, and CNF(0)=0. Consider two expansions of the same transitive domain at U(0), agreeing on membership, U and all other symbols but interpreting r_{1,0} differently: in the first, its extension is empty; in the second, its extension is the singleton {m}, for some natural m in the domain. Then the first structure does not satisfy IsDefinition(P), while the second satisfies IsDefinition(P) and P[Parameter(m)/x₀]. Consequently Definable(m,0,P) changes. Since S_n in the first structure is finite, m can be chosen outside it; adding this witness then changes S_n as well.
+
+This is a sensitivity construction for the internal satisfaction predicate, not yet a completed countermodel to T: to promote it to a theorem about T, one must also construct the entire U-family and its Θ interpretations so that every U(α) satisfies the full ZFC and Henkin schemes. That global model construction is part of M1-E, not an assumption to hide.
+
 **Required result:** either (i) prove invariance of S_n and f(n) under all permitted interpretations of these symbols, or (ii) prove that the source's actual syntax excludes them from the formulae used in f, with a source-backed correction, or (iii) state a chosen expansion as an explicit parameter and make the resulting f relative to it. Do not quietly discard the symbols.
 
 ### B. Free variables in Henkin formulae
