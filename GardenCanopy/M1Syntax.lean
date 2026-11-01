@@ -78,7 +78,7 @@ inductive Symbol where
   | falsum
   | implication
   | negation
-  | exists
+  | existsQuantifier
   | leftParen
   | rightParen
   | constant (i : Nat)
@@ -95,7 +95,7 @@ def symbolTuple : Symbol → SymbolTuple
   | .falsum => (0, 0, 0, 0)
   | .implication => (1, 0, 0, 0)
   | .negation => (2, 0, 0, 0)
-  | .exists => (3, 0, 0, 0)
+  | .existsQuantifier => (3, 0, 0, 0)
   | .leftParen => (4, 0, 0, 0)
   | .rightParen => (5, 0, 0, 0)
   | .constant i => (6, 0, i, 0)
@@ -152,7 +152,7 @@ def Formula.containsTheta : Formula → Bool
   | .falsum => false
   | .implication A B => Formula.containsTheta A || Formula.containsTheta B
   | .negation A => Formula.containsTheta A
-  | .exists _ A => Formula.containsTheta A
+  | .existsQuantifier _ A => Formula.containsTheta A
   | .relation _ args => args.toList.any Term.containsTheta
 
 /-- The source's Henkin-scheme fragment: formulas not containing Θ. -/
