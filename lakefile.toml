@@ -2,5 +2,10 @@ name = "gardenCanopy"
 version = "0.1.0"
 defaultTargets = ["GardenCanopy"]
 
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.35.0"
+
 [[lean_lib]]
 name = "GardenCanopy"
