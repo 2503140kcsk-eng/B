@@ -34,19 +34,17 @@ mutual
     | .variable i => {i}
     | .constant _ => ∅
     | .app _ args => termsVars args
-  termination_by t => sizeOf t
+  termination_by sizeOf t
   decreasing_by
     simp_wf
-    omega
 
   def termsVars (ts : List Term) : Finset Nat :=
     match ts with
     | [] => ∅
     | t :: rest => termVars t ∪ termsVars rest
-  termination_by ts => sizeOf ts
+  termination_by sizeOf ts
   decreasing_by
     simp_wf
-    omega
 end
 
 /- Shape-only size of a term, ignoring the numerical values of variable names. -/
@@ -56,19 +54,17 @@ mutual
     | .variable _ => 1
     | .constant _ => 1
     | .app _ args => 1 + termsNodes args
-  termination_by t => sizeOf t
+  termination_by sizeOf t
   decreasing_by
     simp_wf
-    omega
 
   def termsNodes (ts : List Term) : Nat :=
     match ts with
     | [] => 0
     | t :: rest => termNodes t + termsNodes rest
-  termination_by ts => sizeOf ts
+  termination_by sizeOf ts
   decreasing_by
     simp_wf
-    omega
 end
 
 /-- Every variable index occurring in a formula, including bound indices. -/
@@ -96,7 +92,9 @@ mutual
         if active && decide (i = x) then replacement else .variable (rho i)
     | .constant i => .constant i
     | .app f args => .app f (substituteTermsAux x replacement rho active args)
-  termination_by t => sizeOf t
+  termination_by sizeOf t
+  decreasing_by
+    simp_wf
 
   def substituteTermsAux (x : Nat) (replacement : Term)
       (rho : Nat → Nat) (active : Bool) (ts : List Term) : List Term :=
@@ -105,83 +103,79 @@ mutual
     | t :: rest =>
         substituteTermAux x replacement rho active t ::
           substituteTermsAux x replacement rho active rest
-  termination_by ts => sizeOf ts
-end
-termination_by
-  substituteTermAux _ _ _ _ t => sizeOf t
-  substituteTermsAux _ _ _ _ ts => sizeOf ts
-decreasing_by
-  all_goals
+  termination_by sizeOf ts
+  decreasing_by
     simp_wf
-    omega
+end
 
 /--
 Capture-avoiding substitution of the term replacement for free occurrences of x.
-rho records alpha-renamings of binders already traversed. When active=false,
-the target variable is bound and substitution is suspended, while outer alpha
-renamings are still propagated.
+The renaming environment records alpha-renamings of binders already traversed.
+The freshness index is exactly the least index absent from the current formula,
+the replacement term, and the target variable, as prescribed by the source.
 -/
 noncomputable def substituteFormulaAux (x : Nat) (replacement : Term)
-    (rho : Nat → Nat) (active : Bool) (used : Finset Nat) :
-    Formula → Formula
+    (rho : Nat → Nat) (active : Bool) (P : Formula) : Formula :=
+  match P with
   | .falsum => .falsum
   | .implication A B =>
       .implication
-        (substituteFormulaAux x replacement rho active used A)
-        (substituteFormulaAux x replacement rho active used B)
+        (substituteFormulaAux x replacement rho active A)
+        (substituteFormulaAux x replacement rho active B)
   | .negation A =>
-      .negation (substituteFormulaAux x replacement rho active used A)
+      .negation (substituteFormulaAux x replacement rho active A)
   | .existsQuantifier i A =>
       if active then
         if i = x then
           .existsQuantifier i
-            (substituteFormulaAux x replacement (Function.update rho i i) false used A)
+            (substituteFormulaAux x replacement (Function.update rho i i) false A)
         else if i ∈ termVars replacement then
-          let z := newVar used
+          let z := newVar (formulaVars P ∪ termVars replacement ∪ {x})
           .existsQuantifier z
-            (substituteFormulaAux x replacement (Function.update rho i z) true
-              (insert z used) A)
+            (substituteFormulaAux x replacement (Function.update rho i z) true A)
         else
           .existsQuantifier i
-            (substituteFormulaAux x replacement (Function.update rho i i) true used A)
+            (substituteFormulaAux x replacement (Function.update rho i i) true A)
       else
         .existsQuantifier i
-          (substituteFormulaAux x replacement (Function.update rho i i) false used A)
+          (substituteFormulaAux x replacement (Function.update rho i i) false A)
   | .relation r args =>
       .relation r (substituteTermsAux x replacement rho active args)
-termination_by P => formulaNodes P
+termination_by formulaNodes P
 decreasing_by
   all_goals
     simp [formulaNodes]
+    omega
 
 /-- Source-style one-variable capture-avoiding substitution. -/
 noncomputable def substituteFormula (P : Formula) (replacement : Term) (x : Nat) : Formula :=
-  substituteFormulaAux x replacement id true
-    (formulaVars P ∪ termVars replacement ∪ {x}) P
+  substituteFormulaAux x replacement id true P
 
-/-- The initial fresh-name set contains every variable in the formula. -/
-theorem initialNew_avoids_formula (P : Formula) (t : Term) (x : Nat) :
+/-- The least fresh variable for a formula is absent from its variable indices. -/
+theorem newVar_avoids_formula (P : Formula) (t : Term) (x : Nat) :
     newVar (formulaVars P ∪ termVars t ∪ {x}) ∉ formulaVars P := by
   have h := newVar_not_mem (formulaVars P ∪ termVars t ∪ {x})
-  have hp : formulaVars P ⊆ formulaVars P ∪ termVars t ∪ {x} := by
-    simp
-  exact fun hmem => h (hp hmem)
+  intro hv
+  apply h
+  simp only [Finset.mem_union, Finset.mem_singleton]
+  exact Or.inl (Or.inl hv)
 
-/-- The initial fresh-name set contains every variable in the substituting term. -/
-theorem initialNew_avoids_term (P : Formula) (t : Term) (x : Nat) :
+/-- The least fresh variable for a formula is absent from the replacement term. -/
+theorem newVar_avoids_term (P : Formula) (t : Term) (x : Nat) :
     newVar (formulaVars P ∪ termVars t ∪ {x}) ∉ termVars t := by
   have h := newVar_not_mem (formulaVars P ∪ termVars t ∪ {x})
-  have ht : termVars t ⊆ formulaVars P ∪ termVars t ∪ {x} := by
-    simp
-  exact fun hmem => h (ht hmem)
+  intro hv
+  apply h
+  simp only [Finset.mem_union, Finset.mem_singleton]
+  exact Or.inl (Or.inr hv)
 
-/-- The chosen new variable differs from the substitution target. -/
-theorem initialNew_ne_target (P : Formula) (t : Term) (x : Nat) :
+/-- The least fresh variable for a formula differs from the substitution target. -/
+theorem newVar_ne_target (P : Formula) (t : Term) (x : Nat) :
     newVar (formulaVars P ∪ termVars t ∪ {x}) ≠ x := by
   have h := newVar_not_mem (formulaVars P ∪ termVars t ∪ {x})
   intro heq
   apply h
-  rw [heq]
-  exact Finset.mem_union_right _ (Finset.mem_singleton_self x)
+  simp [heq]
+
 
 end GardenCanopy.M1Substitution
