@@ -90,3 +90,8 @@ LNGN自体について、Googology Wikiの一覧は2026年時点でもwell-defin
 ## 検証
 
 Leanのバージョンは安定版としてLean 4.35.0を固定しています。GitHub ActionsではLean 4.35.0のlake build --wfailに加え、プロジェクト名前空間の公理依存をaxiom-auditで検査します。成功したrunのSHA・ログと対象コミットを必ず対応づけます。
+
+
+## M1 syntax layer
+
+The source-aligned syntax tree and finite-sequence Gödel encoder/partial decoder are being developed in [`GardenCanopy/M1Syntax.lean`](GardenCanopy/M1Syntax.lean). The exact source transcription and outstanding semantic gates are documented in the M1-A audit PR.
