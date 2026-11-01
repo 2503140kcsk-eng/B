@@ -77,24 +77,35 @@ mutual
         TermsEval M σ (t :: ts) (x :: xs)
 end
 
-/-- Tarskian satisfaction, relative to an expansion and variable assignment. -/
-inductive Satisfies {D : Type u} (M : Expansion D) :
-    (Nat → D) → GardenCanopy.M1Syntax.Formula → Prop where
-  | implication {σ : Nat → D} {A B : GardenCanopy.M1Syntax.Formula}
-      (h : Satisfies M σ A → Satisfies M σ B) :
-      Satisfies M σ (GardenCanopy.M1Syntax.Formula.implication A B)
-  | negation {σ : Nat → D} {A : GardenCanopy.M1Syntax.Formula}
-      (h : Satisfies M σ A → False) :
-      Satisfies M σ (GardenCanopy.M1Syntax.Formula.negation A)
-  | existsQuantifier {σ : Nat → D} {i : Nat}
-      {A : GardenCanopy.M1Syntax.Formula} (d : D)
-      (h : Satisfies M (assignmentUpdate σ i d) A) :
-      Satisfies M σ (GardenCanopy.M1Syntax.Formula.existsQuantifier i A)
-  | relation {σ : Nat → D} {r : GardenCanopy.M1Syntax.RelationSymbol}
-      {args : List GardenCanopy.M1Syntax.Term} {values : List D}
-      (heval : TermsEval M σ args values)
-      (hrel : relationInterpretation M r values) :
-      Satisfies M σ (GardenCanopy.M1Syntax.Formula.relation r args)
+/--
+Tarskian satisfaction, defined by structural recursion on formulas.
+The Boolean connectives are represented by their ordinary propositions.
+-/
+def Satisfies {D : Type u} (M : Expansion D) (σ : Nat → D) :
+    GardenCanopy.M1Syntax.Formula → Prop
+  | .falsum => False
+  | .implication A B => Satisfies M σ A → Satisfies M σ B
+  | .negation A => ¬ Satisfies M σ A
+  | .existsQuantifier i A =>
+      ∃ d : D, Satisfies M (assignmentUpdate σ i d) A
+  | .relation r args =>
+      ∃ values : List D,
+        TermsEval M σ args values ∧ relationInterpretation M r values
+
+theorem termsEval_variable_zero_iff {D : Type u} (M : Expansion D)
+    (σ : Nat → D) (values : List D) :
+    TermsEval M σ [GardenCanopy.M1Syntax.Term.variable 0] values
+      ↔ values = [σ 0] := by
+  constructor
+  · intro h
+    cases h with
+    | cons hHead hTail =>
+      cases hHead
+      cases hTail
+      rfl
+  · intro h
+    subst values
+    exact TermsEval.cons (TermEval.variable 0) TermsEval.nil
 
 /-- The source-language atomic formula r_(1,0)(x₀). -/
 def r10Formula : GardenCanopy.M1Syntax.Formula :=
@@ -105,18 +116,16 @@ def r10Formula : GardenCanopy.M1Syntax.Formula :=
 theorem satisfies_r10_iff {D : Type u} (M : Expansion D)
     (σ : Nat → D) :
     Satisfies M σ r10Formula ↔ M.genericRelation 1 0 [σ 0] := by
+  unfold Satisfies r10Formula
   constructor
-  · intro hs
-    cases hs with
-    | relation heval hrel =>
-      cases heval with
-      | cons hhead htail =>
-        cases hhead
-        cases htail
-        exact hrel
-  · intro hrel
-    exact Satisfies.relation
-      (TermsEval.cons (TermEval.variable 0) TermsEval.nil) hrel
+  · rintro ⟨values, hEval, hRel⟩
+    have hValues := (termsEval_variable_zero_iff M σ values).1 hEval
+    subst values
+    simpa [relationInterpretation] using hRel
+  · intro hRel
+    refine ⟨[σ 0], ?_, ?_⟩
+    · exact (termsEval_variable_zero_iff M σ [σ 0]).2 rfl
+    · simpa [relationInterpretation] using hRel
 
 /--
 A permitted arbitrary expansion in which every parameter c_i denotes d,
