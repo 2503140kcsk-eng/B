@@ -59,7 +59,8 @@ termination_by n => n + 1
 decreasing_by
   all_goals
     simp_wf
-    assumption
+    dsimp [k, v, j] at *
+    omega
 
 @[simp] theorem sourceCNF_zero : sourceCNF 0 = 0 := by
   simp [sourceCNF]
