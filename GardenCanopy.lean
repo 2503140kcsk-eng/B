@@ -1,5 +1,6 @@
 import Std
 import GardenCanopy.M1Syntax
+import GardenCanopy.M1Substitution
 
 namespace GardenCanopy
 
