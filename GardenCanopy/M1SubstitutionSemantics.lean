@@ -13,10 +13,7 @@ open GardenCanopy.M1Substitution
 
 universe u
 
-/--
-Every source term has a semantic value in every expansion and under every
-assignment. This is proved from the inductive evaluation relation itself.
--/
+/- Every source term has a semantic value in every expansion and assignment. -/
 mutual
   theorem termEval_exists {D : Type u} (M : Expansion D) (σ : Nat → D) :
       ∀ t : Term, ∃ d : D, TermEval M σ t d
@@ -27,6 +24,7 @@ mutual
         exact ⟨functionInterpretation M f values, TermEval.app hValues⟩
     termination_by t => sizeOf t
     decreasing_by all_goals simp_wf
+      try omega
 
   theorem termsEval_exists {D : Type u} (M : Expansion D) (σ : Nat → D) :
       ∀ ts : List Term, ∃ values : List D, TermsEval M σ ts values
@@ -39,7 +37,7 @@ mutual
     decreasing_by all_goals simp_wf
 end
 
-/-- The evaluation relation assigns at most one value to a term. -/
+/- The evaluation relation assigns at most one value to a term. -/
 mutual
   theorem termEval_deterministic {D : Type u} (M : Expansion D) (σ : Nat → D)
       {t : Term} {v w : D} (h₁ : TermEval M σ t v) (h₂ : TermEval M σ t w) :
