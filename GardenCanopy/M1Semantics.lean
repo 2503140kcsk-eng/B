@@ -38,7 +38,7 @@ def assignmentUpdate {D : Type u} (σ : Nat → D) (i : Nat) (d : D) : Nat → D
 @[simp] theorem assignmentUpdate_other {D : Type u} [DecidableEq Nat]
     (σ : Nat → D) (i j : Nat) (d : D) (h : j ≠ i) :
     assignmentUpdate σ i d j = σ j := by
-  simp [assignmentUpdate, h.symm]
+  simp [assignmentUpdate, h]
 
 def functionInterpretation {D : Type u} (M : Expansion D) :
     GardenCanopy.M1Syntax.FunctionSymbol → List D → D
@@ -87,8 +87,8 @@ inductive Satisfies {D : Type u} (M : Expansion D) :
       (h : Satisfies M σ A → False) :
       Satisfies M σ (GardenCanopy.M1Syntax.Formula.negation A)
   | existsQuantifier {σ : Nat → D} {i : Nat}
-      {A : GardenCanopy.M1Syntax.Formula}
-      (h : ∃ d : D, Satisfies M (assignmentUpdate σ i d) A) :
+      {A : GardenCanopy.M1Syntax.Formula} (d : D)
+      (h : Satisfies M (assignmentUpdate σ i d) A) :
       Satisfies M σ (GardenCanopy.M1Syntax.Formula.existsQuantifier i A)
   | relation {σ : Nat → D} {r : GardenCanopy.M1Syntax.RelationSymbol}
       {args : List GardenCanopy.M1Syntax.Term} {values : List D}
@@ -173,8 +173,8 @@ theorem collapsed_all_parameters_definable {D : Type u} [Nonempty D] (d : D) :
   constructor
   · exact collapsed_defines_exactly d
   · intro σ
-    rw [collapsed_satisfies_r10_iff]
-    simp [collapsedExpansion]
+    change Satisfies (collapsedExpansion d) σ r10Formula ↔ σ 0 = d
+    exact collapsed_satisfies_r10_iff d σ
 
 /-- Natural indices witnessed by this one fixed formula and model. -/
 def fixedWitnessValues {D : Type u} (M : Expansion D) : Set Nat :=
