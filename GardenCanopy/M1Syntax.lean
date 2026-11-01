@@ -1,9 +1,9 @@
 module
 
-import Mathlib.Data.Nat.Prime.Nth
-import Mathlib.Data.Nat.PrimeFin
-import Mathlib.Data.Nat.Factorization.Basic
-import Mathlib.Tactic
+public import Mathlib.Data.Nat.Prime.Nth
+public import Mathlib.Data.Nat.PrimeFin
+public import Mathlib.Data.Nat.Factorization.Basic
+public import Mathlib.Tactic
 
 public section
 
