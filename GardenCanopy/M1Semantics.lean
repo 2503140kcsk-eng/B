@@ -1,8 +1,8 @@
 module
 
-import GardenCanopy.M1Syntax
-import Mathlib.Data.Set.Basic
-import Mathlib.Data.Set.Finite.Basic
+public import GardenCanopy.M1Syntax
+public import Mathlib.Data.Set.Basic
+public import Mathlib.Data.Set.Finite.Basic
 
 public section
 
