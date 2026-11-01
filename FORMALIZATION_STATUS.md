@@ -1,16 +1,47 @@
 # Formalization status and long-term plan
 
+## Verified arithmetic milestone — 2026-11-01
+
+**Verified source commit:** 2e85c1a2ce2ec0408de2d9784ca88fb568dc6450  
+**Lean CI run:** https://github.com/2503140kcsk-eng/B/actions/runs/41303244693  
+**Toolchain:** Lean 4.35.0  
+**Build command:** lake build --wfail  
+**Axiom audit:** passed for 41 declarations under namespace GardenCanopy.
+
+The build completed successfully. The axiom audit completed successfully with the configured allowlist: propext, Classical.choice, Quot.sound. The audit rejects unapproved axioms, sorryAx, Lean.ofReduceBool, and home-rolled axioms. This is evidence for the arithmetic proof layer in the listed source commit only.
+
+Verified theorem declarations:
+
+- GardenCanopy.gardenCanopy_gt_lngn
+- GardenCanopy.gardenCanopy_gt_next_f_value
+- GardenCanopy.gardenCanopy_ge_power_of_lngn
+- GardenCanopy.gardenCanopy_is_finite
+
+The first three establish, for every total function f : Nat → Nat:
+
+\[
+\mathrm{GCN}(f)>L(f),\qquad
+\mathrm{GCN}(f)>f(L(f)),\qquad
+\mathrm{GCN}(f)\ge 2^{L(f)+1}.
+\]
+
+The semantic bridge from the exact author-defined theory T and its function f to this Lean parameter is still not formalized. The arithmetic results are not yet a proof of an unconditional, source-instantiated GCN numeral independent of that unresolved bridge.
+
+The successful run does not certify commits that later change GardenCanopy.lean, lean-toolchain, lakefile.toml, or the workflow. Re-run CI after any such change.
+
+
 ## Status at project initialization
 
 This repository is a fresh research project. The files currently describe a proposed definition and a general Lean theorem. Do not treat the exact source-theory semantics of LNGN as formalized.
 
 | Layer | Status | Evidence required to upgrade |
 |---|---|---|
-| Definition of prefix maximum and amplification | Implemented in Lean source | Successful Lean build |
-| Totality of finite iteration | By structural recursion in Lean | Successful Lean build |
-| GCN(f) > L(f), for arbitrary f : Nat → Nat | Theorem written | Successful Lean build and kernel check |
-| GCN(f) > f(L(f)) | Theorem written | Successful Lean build and kernel check |
-| Exact Knuth-arrow seed convention | Defined recursively in Lean | Successful Lean build plus comparison against standard recurrence |
+| Definition of prefix maximum and amplification | Implemented and CI-verified | Successful Lean build under Lean 4.35.0 |
+| Totality of finite iteration | By structural recursion; CI-verified | Successful Lean build under Lean 4.35.0 |
+| GCN(f) > L(f), for arbitrary f : Nat → Nat | CI-verified | Successful Lean build and kernel check |
+| GCN(f) > f(L(f)) | CI-verified | Successful Lean build and kernel check |
+| GCN(f) ≥ 2^(L(f)+1) | CI-verified | Successful Lean build and kernel check |
+| Exact Knuth-arrow seed convention | Defined recursively in Lean; source compiled | Independent recurrence review remains open |
 | Exact author-defined T, formal language, code maps and substitution | Not formalized | Line-by-line transcription and Lean definitions |
 | U(alpha) model sequence, satisfaction relation and coherence axioms | Not formalized | Explicit semantic encoding, with assumptions exposed |
 | Existence/consistency of required model sequence | Not proved here | A separate relative-consistency/model-existence argument or explicit assumptions |
@@ -20,10 +51,11 @@ This repository is a fresh research project. The files currently describe a prop
 ## Long-term research milestones
 
 ### M0 — Baseline arithmetic proof
-- Compile the Lean source under the pinned Lean toolchain.
-- Inspect all warnings and eliminate warnings under --wfail.
-- Record workflow run URL, commit SHA, and job log.
-- Verify the source contains no sorry, admit, or unapproved axioms.
+- [x] Compile the Lean source under the pinned Lean 4.35.0 toolchain.
+- [x] Build with --wfail; no Lean warnings are permitted.
+- [x] Record workflow run URL, source commit SHA, and job log.
+- [x] Run axiom-audit over the GardenCanopy namespace; 41 declarations passed the configured core allowlist.
+- [ ] Add an independent type checker (e.g. nanoda) as a second verification route.
 
 ### M1 — Freeze the source definition
 - Obtain the original author post and archive its exact revision/date.
