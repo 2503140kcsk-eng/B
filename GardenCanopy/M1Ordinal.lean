@@ -48,17 +48,18 @@ noncomputable def sourceCNF : Nat → NONote
       have hpPow : 1 < p ^ v := by
         exact (Nat.one_lt_pow_iff hvpos.ne').2 hp.one_lt
       have hjlt : j - 1 < n + 1 := by
-        have hdiv : k / p ^ v < k := Nat.div_lt_self (by omega) hpPow
-        dsimp [j, sourceQuotient]
+        have hdiv : k / p ^ v < k :=
+          Nat.div_lt_self (by omega : 0 < k) hpPow
+        have hquot : j < k := by
+          simpa [j, sourceQuotient, p, v, sourceExponent] using hdiv
         omega
       exact NONote.opow omegaNote (sourceCNF (v - 1)) +
         sourceCNF (j - 1)
-termination_by n => n
+termination_by n => n + 1
 decreasing_by
   all_goals
     simp_wf
-    dsimp [v, sourceExponent, j, sourceQuotient] at *
-    omega
+    assumption
 
 @[simp] theorem sourceCNF_zero : sourceCNF 0 = 0 := by
   simp [sourceCNF]
