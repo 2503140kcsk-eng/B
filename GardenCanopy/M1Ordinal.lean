@@ -40,21 +40,27 @@ noncomputable def sourceCNF : Nat → NONote
       have hvbound : p * v ≤ k := by
         dsimp [v, sourceExponent]
         exact Nat.mul_factorization_le
+      have h2v : 2 * v ≤ k := by
+        calc
+          2 * v ≤ p * v := Nat.mul_le_mul_right v hp2
+          _ ≤ k := hvbound
       have hvlt : v - 1 < n + 1 := by omega
       have hpPow : 1 < p ^ v := by
         exact (Nat.one_lt_pow_iff hvpos.ne').2 hp.one_lt
       have hjlt : j - 1 < n + 1 := by
         have hdiv : k / p ^ v < k := Nat.div_lt_self (by omega) hpPow
         dsimp [j, sourceQuotient]
-        exact Nat.sub_lt_sub_right hdiv 1
+        omega
       exact NONote.opow omegaNote (sourceCNF (v - 1)) +
         sourceCNF (j - 1)
 termination_by n => n
 decreasing_by
   all_goals
     simp_wf
-    assumption
+    dsimp [v, sourceExponent, j, sourceQuotient] at *
+    omega
 
-@[simp] theorem sourceCNF_zero : sourceCNF 0 = 0 := rfl
+@[simp] theorem sourceCNF_zero : sourceCNF 0 = 0 := by
+  simp [sourceCNF]
 
 end GardenCanopy.M1Ordinal
