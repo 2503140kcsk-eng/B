@@ -73,6 +73,7 @@ LNGN自体について、Googology Wikiの一覧は2026年時点でもwell-defin
 ## ディレクトリ
 
 - GardenCanopy.lean — 算術的定義と一般大小定理
+- M1_SOURCE_AUDIT.md — 原作者の一次資料・改訂履歴・符号化・M1監査ゲートの固定
 - PROOF_SKETCH.md — 高校数学レベルの証明骨子
 - LNGN_SPEC.md — LNGNの公開定義、前提、意味論上の未解決点
 - FORMALIZATION_STATUS.md — 証明状況と長期タスク
@@ -81,6 +82,7 @@ LNGN自体について、Googology Wikiの一覧は2026年時点でもwell-defin
 
 ## 参考資料
 
+- [原作者の一次資料](https://googology.fandom.com/ja/wiki/ユーザーブログ:P進大好きbot/高階集合論を超えた1階述語論理?oldid=61601) — 2019-12-03公開、2023-10-19の修正反映版。詳細なリビジョン固定と採用規則は [M1_SOURCE_AUDIT.md](M1_SOURCE_AUDIT.md)。
 - [巨大数庭園数（日本語）](https://googology.fandom.com/ja/wiki/巨大数庭園数) — 定義の二次的整理。
 - [Large Number Garden Number（English）](https://googology.fandom.com/wiki/Large_Number_Garden_Number) — 英語版の記述とwell-definednessに関する留保。
 - [高階集合論を超えた1階述語論理](https://googology.fandom.com/ja/wiki/ユーザーブログ:P進大好きbot/高階集合論を超えた1階述語論理) — 作者の元の定義を追うための入口。
