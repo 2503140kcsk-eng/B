@@ -113,7 +113,7 @@ A Wolfram Language prototype checked sample round trips for [], [0], [1], [0,0],
 
 ## 5. Numeral codes and the Henkin extension
 
-For n∈ω, the source denotes by Formalise(n) a formula of ZFC_⌜L⌝ with x₀ as its only free variable, defining the numeral n by the source's repeated-successor formalization. Code(P) is Formalise(MetaCode(P)).
+For n∈ω, the source denotes by Formalise(n) a formula of ZFC_⌜L⌝ with x₀ as its only free variable, defining the set-theoretic numeral n. Code(P) is Formalise(MetaCode(P)).
 
 The source defines the Henkin axiom Henkin_{i,P} as the formalized assertion:
 
@@ -128,7 +128,7 @@ The quantified scheme is indexed by i∈ω and P∈Formula_-. The resulting theo
 
 The distinction between Formula and Formula_- is mandatory: P in the Henkin scheme excludes Θ, while the later definition of Definable quantifies over Formula.
 
-The exact Lean construction of Formalise(n) still needs to pin down the token-level formula for the empty set and the successor iteration from the primary source's numeral convention. It must not be replaced with Lean's Nat literal notation, because the code is a formula *inside* ZFC_⌜L⌝.
+The source passage identifies Formalise(n) by its defining role but the transcription available in this audit does not pin down every token-level constructor (in particular the base formula for zero and the exact successor-step text). Those constructors must be recovered from the primary source's numeral convention before implementation. Formalise(n) must not be replaced with Lean's Nat literal notation, because the code is a formula *inside* ZFC_⌜L⌝.
 
 ## 6. Theory T and its model sequence
 
