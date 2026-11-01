@@ -1,0 +1,6 @@
+name = "gardenCanopy"
+version = "0.1.0"
+defaultTargets = ["GardenCanopy"]
+
+[[lean_lib]]
+name = "GardenCanopy"
