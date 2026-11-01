@@ -1,8 +1,8 @@
 module
 
-import Mathlib.SetTheory.Ordinal.Notation
-import Mathlib.Data.Nat.Factorization.PrimePow
-import Mathlib.Tactic
+public import Mathlib.SetTheory.Ordinal.Notation
+public import Mathlib.Data.Nat.Factorization.PrimePow
+public import Mathlib.Tactic
 
 public section
 
