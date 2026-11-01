@@ -34,38 +34,22 @@ mutual
     | .variable i => {i}
     | .constant _ => ∅
     | .app _ args => termsVars args
-  termination_by sizeOf t
-  decreasing_by
-    simp_wf
 
   def termsVars (ts : List Term) : Finset Nat :=
-    match ts with
-    | [] => ∅
-    | t :: rest => termVars t ∪ termsVars rest
-  termination_by sizeOf ts
-  decreasing_by
-    simp_wf
+    (ts.attach.map (fun ⟨t, _ht⟩ => termVars t)).foldr
+      (fun s acc => s ∪ acc) ∅
 end
 
-/- Shape-only size of a term, ignoring the numerical values of variable names. -/
+/-- Shape-only size of a term, ignoring the numerical values of variable names. -/
 mutual
   def termNodes (t : Term) : Nat :=
     match t with
     | .variable _ => 1
     | .constant _ => 1
     | .app _ args => 1 + termsNodes args
-  termination_by sizeOf t
-  decreasing_by
-    simp_wf
 
   def termsNodes (ts : List Term) : Nat :=
-    match ts with
-    | [] => 0
-    | t :: rest => termNodes t + termsNodes rest
-  termination_by sizeOf ts
-  decreasing_by
-    simp_wf
-    omega
+    (ts.attach.map (fun ⟨t, _ht⟩ => termNodes t)).sum
 end
 
 /-- Every variable index occurring in a formula, including bound indices. -/
@@ -93,24 +77,12 @@ mutual
         if active && decide (i = x) then replacement else .variable (rho i)
     | .constant i => .constant i
     | .app f args => .app f (substituteTermsAux x replacement rho active args)
-  termination_by sizeOf t
-  decreasing_by
-    simp_wf
 
   def substituteTermsAux (x : Nat) (replacement : Term)
       (rho : Nat → Nat) (active : Bool) (ts : List Term) : List Term :=
-    match ts with
-    | [] => []
-    | t :: rest =>
-        substituteTermAux x replacement rho active t ::
-          substituteTermsAux x replacement rho active rest
-  termination_by sizeOf ts
-  decreasing_by
-    simp_wf
-    omega
+    ts.attach.map (fun ⟨t, _ht⟩ => substituteTermAux x replacement rho active t)
 end
 
-/--
 Capture-avoiding substitution of the term replacement for free occurrences of x.
 The renaming environment records alpha-renamings of binders already traversed.
 The freshness index is exactly the least index absent from the current formula,
