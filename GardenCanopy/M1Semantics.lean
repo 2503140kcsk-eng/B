@@ -3,6 +3,8 @@ module
 import GardenCanopy.M1Syntax
 import Mathlib.Data.Set.Lattice
 
+public section
+
 namespace GardenCanopy.M1Semantics
 
 universe u
