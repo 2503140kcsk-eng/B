@@ -4,6 +4,8 @@ public import Mathlib.SetTheory.Ordinal.Notation
 public import Mathlib.Data.Nat.Factorization.PrimePow
 public import Mathlib.Tactic
 
+public section
+
 namespace GardenCanopy.M1Ordinal
 
 /-- The normal-form notation for the ordinal omega. -/
