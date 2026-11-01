@@ -42,16 +42,16 @@ def assignmentUpdate {D : Type u} (σ : Nat → D) (i : Nat) (d : D) : Nat → D
 
 def functionInterpretation {D : Type u} (M : Expansion D) :
     GardenCanopy.M1Syntax.FunctionSymbol → List D → D
-  | GardenCanopy.M1Syntax.FunctionSymbol.unaryU, [x] => M.unaryU x
-  | GardenCanopy.M1Syntax.FunctionSymbol.theta, [x] => M.theta x
-  | GardenCanopy.M1Syntax.FunctionSymbol.generic arity index, args =>
+  | .unaryU, [x] => M.unaryU x
+  | .theta, [x] => M.theta x
+  | .generic arity index, args =>
       M.genericFunction arity index args
   | _, _ => M.defaultElement
 
 def relationInterpretation {D : Type u} (M : Expansion D) :
     GardenCanopy.M1Syntax.RelationSymbol → List D → Prop
-  | GardenCanopy.M1Syntax.RelationSymbol.membership, [x, y] => M.membership x y
-  | GardenCanopy.M1Syntax.RelationSymbol.generic arity index, args =>
+  | .membership, [x, y] => M.membership x y
+  | .generic arity index, args =>
       M.genericRelation arity index args
   | _, _ => False
 
@@ -99,7 +99,7 @@ inductive Satisfies {D : Type u} (M : Expansion D) :
 /-- The source-language atomic formula r_(1,0)(x₀). -/
 def r10Formula : GardenCanopy.M1Syntax.Formula :=
   GardenCanopy.M1Syntax.Formula.relation
-    (GardenCanopy.M1Syntax.RelationSymbol.generic 1 0)
+    (.generic 1 0)
     [GardenCanopy.M1Syntax.Term.variable 0]
 
 theorem satisfies_r10_iff {D : Type u} (M : Expansion D)
