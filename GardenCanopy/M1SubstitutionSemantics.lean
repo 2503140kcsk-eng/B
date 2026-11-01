@@ -26,7 +26,6 @@ mutual
     decreasing_by
       all_goals
         simp_wf
-        try omega
 
   theorem termsEval_exists {D : Type u} (M : Expansion D) (σ : Nat → D) :
       ∀ ts : List Term, ∃ values : List D, TermsEval M σ ts values
@@ -48,10 +47,10 @@ mutual
       {t : Term} {v w : D} (h₁ : TermEval M σ t v) (h₂ : TermEval M σ t w) :
       v = w := by
     cases h₁ with
-    | variable i =>
+    | «variable» i =>
         cases h₂
         rfl
-    | constant i =>
+    | «constant» i =>
         cases h₂
         rfl
     | app hValues₁ =>
