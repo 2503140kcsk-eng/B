@@ -1,5 +1,10 @@
 import Std
-
+import GardenCanopy.M1Syntax
+import GardenCanopy.M1Ordinal
+import GardenCanopy.M1Substitution
+import GardenCanopy.M1Semantics
+import GardenCanopy.M1FiniteSum
+import GardenCanopy.M1SubstitutionSemantics
 namespace GardenCanopy
 
 /-- Apply g exactly k times to n. -/
@@ -49,8 +54,7 @@ theorem self_le_prefixMax (f : Nat → Nat) :
   | zero =>
       simp [prefixMax]
   | succ n ih =>
-      simpa [prefixMax] using
-        (Nat.le_max_right (prefixMax f n) (f (n + 1)))
+      simp [prefixMax]
 
 theorem amplification_gt_self (f : Nat → Nat) (n : Nat) :
     n < amplification f n := by
