@@ -1,6 +1,7 @@
 import Std
 import GardenCanopy.M1Syntax
 import GardenCanopy.M1Ordinal
+import GardenCanopy.M1Semantics
 import GardenCanopy.M1Ordinal
 
 namespace GardenCanopy
