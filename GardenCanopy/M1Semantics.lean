@@ -329,4 +329,23 @@ theorem arbitrary_relation_interpretation_changes_Definable
   · exact singletonR10_parameter_definable M m (M.constants m) rfl
   · exact emptyR10_not_parameter_definable M m
 
+
+/--
+If the parameter interpretation is injective, a fixed uniquely-defining
+formula can be associated with at most one natural parameter index.
+-/
+theorem parameterDefinable_unique_index_of_injective {D : Type u}
+    (M : Expansion D) (hInjective : Function.Injective M.constants)
+    {m n : Nat} (hm : ParameterDefinable M m) (hn : ParameterDefinable M n) :
+    m = n := by
+  let σ : Nat → D := fun i =>
+    if i = 0 then M.constants m else M.defaultElement
+  have h0 : σ 0 = M.constants m := by
+    simp [σ]
+  have hSat : Satisfies M σ r10Formula :=
+    (hm.2 σ).2 h0
+  have h1 : σ 0 = M.constants n :=
+    (hn.2 σ).1 hSat
+  exact hInjective (h0.trans h1)
+
 end GardenCanopy.M1Semantics
