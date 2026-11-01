@@ -3,6 +3,7 @@ module
 import Mathlib.Data.Nat.Prime.Nth
 import Mathlib.Data.Nat.PrimeFin
 import Mathlib.Data.Nat.Factorization.Basic
+import Mathlib.Tactic
 
 open scoped BigOperators
 
@@ -51,7 +52,7 @@ noncomputable def sequenceCandidate (n : Nat) : List Nat :=
 /--
 The source-code decoder is partial. It accepts the factorization-derived candidate
 only when re-encoding it returns the original code; all malformed codes return none.
-This equality check is equivalent to rejecting a non-unit residual cofactor.
+This equality check rejects any residual cofactor not represented by the source list.
 -/
 noncomputable def decodeSequence (n : Nat) : Option (List Nat) :=
   if encodeSequence (sequenceCandidate n) = n
@@ -61,12 +62,11 @@ noncomputable def decodeSequence (n : Nat) : Option (List Nat) :=
 theorem decodeSequence_sound {n : Nat} {xs : List Nat}
     (h : decodeSequence n = some xs) :
     encodeSequence xs = n := by
-  unfold decodeSequence at h
-  split_ifs at h with hEq
-  · injection h with hxs
-    subst xs
-    exact hEq
-  · contradiction
+  by_cases hEq : encodeSequence (sequenceCandidate n) = n
+  · have hxs : sequenceCandidate n = xs := by
+      simpa [decodeSequence, hEq] using h
+    simpa [hxs] using hEq
+  · simp [decodeSequence, hEq] at h
 
 theorem decodeSequence_value {n : Nat} :
     decodeSequence n =
@@ -119,26 +119,31 @@ noncomputable def symbolCode (s : Symbol) : Nat :=
   let (a₀, a₁, a₂, a₃) := symbolTuple s
   encodeSequence [a₀, a₁, a₂, a₃]
 
-/-- Function symbols indexed by their arity. -/
-inductive FunctionSymbol : Nat → Type
-  | unaryU : FunctionSymbol 1
-  | theta : FunctionSymbol 1
-  | generic (arity index : Nat) : FunctionSymbol arity
+/-- Function symbols; the arity function gives their argument count. -/
+inductive FunctionSymbol where
+  | unaryU
+  | theta
+  | generic (arity index : Nat)
 
-/-- Relation symbols indexed by their arity. -/
-inductive RelationSymbol : Nat → Type
-  | membership : RelationSymbol 2
-  | generic (arity index : Nat) : RelationSymbol arity
+def FunctionSymbol.arity : FunctionSymbol → Nat
+  | .unaryU => 1
+  | .theta => 1
+  | .generic arity _ => arity
 
-/--
-Terms use named natural-number variables, matching the author's xᵢ convention.
-The arity equality ensures that every application has the declared number of arguments.
--/
+/-- Relation symbols; membership is binary and generic relations carry an arity. -/
+inductive RelationSymbol where
+  | membership
+  | generic (arity index : Nat)
+
+def RelationSymbol.arity : RelationSymbol → Nat
+  | .membership => 2
+  | .generic arity _ => arity
+
+/-- First-order terms over named variables and parameter constants. -/
 inductive Term where
   | variable (index : Nat)
   | constant (index : Nat)
-  | app {arity : Nat} (f : FunctionSymbol arity)
-      (args : List Term) (arity_eq : args.length = arity)
+  | app (f : FunctionSymbol) (args : List Term)
 
 /-- First-order formulas with the source's primitive connectives and quantifier. -/
 inductive Formula where
@@ -146,22 +151,35 @@ inductive Formula where
   | implication (left right : Formula)
   | negation (body : Formula)
   | existsQuantifier (index : Nat) (body : Formula)
-  | relation {arity : Nat} (r : RelationSymbol arity)
-      (args : List Term) (arity_eq : args.length = arity)
+  | relation (r : RelationSymbol) (args : List Term)
+
+/-- Arity-correctness at the root of terms. -/
+def Term.hasCorrectRootArity : Term → Prop
+  | .variable _ => True
+  | .constant _ => True
+  | .app f args => args.length = f.arity
+
+/-- Arity-correctness at the root of atomic relation formulae. -/
+def Formula.hasCorrectRootArity : Formula → Prop
+  | .falsum => True
+  | .implication _ _ => True
+  | .negation _ => True
+  | .existsQuantifier _ _ => True
+  | .relation r args => args.length = r.arity
 
 def Term.containsTheta : Term → Bool
   | .variable _ => false
   | .constant _ => false
-  | .app .theta _ _ => true
-  | .app .unaryU args _ => args.any Term.containsTheta
-  | .app (.generic _ _) args _ => args.any Term.containsTheta
+  | .app .theta _ => true
+  | .app .unaryU args => args.any Term.containsTheta
+  | .app (.generic _ _) args => args.any Term.containsTheta
 
 def Formula.containsTheta : Formula → Bool
   | .falsum => false
   | .implication A B => Formula.containsTheta A || Formula.containsTheta B
   | .negation A => Formula.containsTheta A
   | .existsQuantifier _ A => Formula.containsTheta A
-  | .relation _ args _ => args.any Term.containsTheta
+  | .relation _ args => args.any Term.containsTheta
 
 /-- The source's Henkin-scheme fragment: formulas not containing Θ. -/
 def FormulaWithoutTheta (P : Formula) : Prop :=
