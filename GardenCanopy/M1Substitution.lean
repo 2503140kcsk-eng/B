@@ -37,6 +37,7 @@ mutual
   termination_by sizeOf t
   decreasing_by
     simp_wf
+    omega
 
   def termsVars (ts : List Term) : Finset Nat :=
     match ts with
@@ -144,8 +145,7 @@ noncomputable def substituteFormulaAux (x : Nat) (replacement : Term)
 termination_by formulaNodes P
 decreasing_by
   all_goals
-    simp [formulaNodes]
-    omega
+    simp [formulaNodes] <;> omega
 
 /-- Source-style one-variable capture-avoiding substitution. -/
 noncomputable def substituteFormula (P : Formula) (replacement : Term) (x : Nat) : Formula :=
@@ -174,8 +174,11 @@ theorem newVar_ne_target (P : Formula) (t : Term) (x : Nat) :
     newVar (formulaVars P ∪ termVars t ∪ {x}) ≠ x := by
   have h := newVar_not_mem (formulaVars P ∪ termVars t ∪ {x})
   intro heq
-  apply h
-  simp [heq]
+  have hmem : newVar (formulaVars P ∪ termVars t ∪ {x}) ∈
+      formulaVars P ∪ termVars t ∪ {x} := by
+    rw [heq]
+    simp
+  exact h hmem
 
 
 end GardenCanopy.M1Substitution
