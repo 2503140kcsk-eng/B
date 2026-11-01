@@ -10,7 +10,7 @@ namespace GardenCanopy.M1Substitution
 open GardenCanopy.M1Syntax
 
 /-- The least natural variable index not occurring in a finite set. -/
-def newVarExists (s : Finset Nat) : ∃ n : Nat, n ∉ s := by
+theorem newVarExists (s : Finset Nat) : ∃ n : Nat, n ∉ s := by
   refine ⟨s.sup id + 1, ?_⟩
   intro hmem
   have hbound : s.sup id + 1 ≤ s.sup id := by
@@ -33,18 +33,19 @@ mutual
     | .variable i => {i}
     | .constant _ => ∅
     | .app _ args => termsVars args
+  termination_by sizeOf t
+  decreasing_by
+    simp_wf
+    omega
 
   def termsVars : List Term → Finset Nat
     | [] => ∅
     | t :: ts => termVars t ∪ termsVars ts
-end
-termination_by
-  termVars t => sizeOf t
-  termsVars ts => sizeOf ts
-decreasing_by
-  all_goals
+  termination_by sizeOf ts
+  decreasing_by
     simp_wf
     omega
+end
 
 /-- Shape-only size of a term, ignoring the numerical values of variable names. -/
 mutual
@@ -52,18 +53,19 @@ mutual
     | .variable _ => 1
     | .constant _ => 1
     | .app _ args => 1 + termsNodes args
+  termination_by sizeOf t
+  decreasing_by
+    simp_wf
+    omega
 
   def termsNodes : List Term → Nat
     | [] => 0
     | t :: ts => termNodes t + termsNodes ts
-end
-termination_by
-  termNodes t => sizeOf t
-  termsNodes ts => sizeOf ts
-decreasing_by
-  all_goals
+  termination_by sizeOf ts
+  decreasing_by
     simp_wf
     omega
+end
 
 /-- Every variable index occurring in a formula, including bound indices. -/
 def formulaVars : Formula → Finset Nat
