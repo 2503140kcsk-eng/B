@@ -202,22 +202,22 @@ def FormulaWithoutTheta (P : Formula) : Prop :=
 /-! ## Hand-checkable code vectors from the source definition -/
 
 example : encodeSequence [] = 0 := by
-  simp [encodeSequence, sequencePayload]
+  simp [encodeSequence, sequencePayload, sequencePayloadAux]
 
 example : encodeSequence [0] = 1 := by
-  norm_num [encodeSequence, sequencePayload, sourcePrime]
+  norm_num [encodeSequence, sequencePayload, sequencePayloadAux, sourcePrime]
 
 example : encodeSequence [1] = 5 := by
-  norm_num [encodeSequence, sequencePayload, sourcePrime,
+  norm_num [encodeSequence, sequencePayload, sequencePayloadAux, sourcePrime,
     Nat.nth_prime_one_eq_three]
 
 example : encodeSequence [0, 1] = 19 := by
-  norm_num [encodeSequence, sequencePayload, sourcePrime,
+  norm_num [encodeSequence, sequencePayload, sequencePayloadAux, sourcePrime,
     Nat.nth_prime_one_eq_three, Nat.nth_prime_two_eq_five]
 
 example : encodeSequence [3, 2, 5] =
     2 ^ 3 * 3 ^ 3 * 5 ^ 2 * 7 ^ 5 - 1 := by
-  norm_num [encodeSequence, sequencePayload, sourcePrime,
+  norm_num [encodeSequence, sequencePayload, sequencePayloadAux, sourcePrime,
     Nat.nth_prime_one_eq_three, Nat.nth_prime_two_eq_five,
     Nat.nth_prime_three_eq_seven]
 
