@@ -128,7 +128,7 @@ Because the summation domain is a set, each natural number is counted once,
 regardless of how many witnesses produced its membership.
 -/
 noncomputable def finiteNaturalSum (s : Set Nat) (hs : s.Finite) : Nat :=
-  ∑ m in hs.toFinset, m
+  ∑ m ∈ hs.toFinset, m
 
 /-- Conditional model-relative finite sum over the qualifying parameter indices. -/
 noncomputable def boundedCandidateSum
