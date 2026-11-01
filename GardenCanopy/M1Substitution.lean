@@ -124,7 +124,7 @@ noncomputable def substituteFormulaAux (x : Nat) (replacement : Term)
 termination_by formulaNodes P
 decreasing_by
   all_goals
-    simp [formulaNodes]
+    omega
 
 /-- Source-style one-variable capture-avoiding substitution. -/
 noncomputable def substituteFormula (P : Formula) (replacement : Term) (x : Nat) : Formula :=
