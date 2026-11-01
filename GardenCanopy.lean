@@ -74,6 +74,15 @@ theorem function_value_lt_amplification (f : Nat → Nat) (n : Nat) :
   exact Nat.lt_of_le_of_lt hmem
     (Nat.lt_of_lt_of_le hsucc (Nat.le_trans hinner houter))
 
+
+theorem amplification_ge_power (f : Nat → Nat) (n : Nat) :
+    2 ^ (n + 1) ≤ amplification f n := by
+  unfold amplification
+  exact Nat.le_trans
+    (Nat.le_max_left (2 ^ (n + 1)) (prefixMax f n + 1))
+    (Nat.le_max_right (n + 1)
+      (max (2 ^ (n + 1)) (prefixMax f n + 1)))
+
 theorem iterate_ge_of_expansive
     (g : Nat → Nat) (hg : ∀ n, n < g n) :
     ∀ k n, n ≤ iterate g k n := by
@@ -121,6 +130,25 @@ theorem gardenCanopy_gt_next_f_value (f : Nat → Nat) :
         (lngnValue f)
         (amplification f (lngnValue f)))
   exact Nat.lt_of_lt_of_le hfirst hrest
+
+
+/-- GCN is at least 2^(LNGN(f)+1), an explicit exponential lower bound. -/
+theorem gardenCanopy_ge_power_of_lngn (f : Nat → Nat) :
+    2 ^ (lngnValue f + 1) ≤ gardenCanopyNumber f := by
+  unfold gardenCanopyNumber
+  have hfirst :
+      2 ^ (lngnValue f + 1) ≤ amplification f (lngnValue f) :=
+    amplification_ge_power f (lngnValue f)
+  have hrest :
+      amplification f (lngnValue f) ≤
+        iterate (amplification f) (lngnValue f + 1) (lngnValue f) := by
+    simpa [iterate] using
+      (iterate_ge_of_expansive
+        (amplification f)
+        (amplification_gt_self f)
+        (lngnValue f)
+        (amplification f (lngnValue f)))
+  exact Nat.le_trans hfirst hrest
 
 /-- Every component of the definition is a natural number by construction. -/
 theorem gardenCanopy_is_finite (f : Nat → Nat) :

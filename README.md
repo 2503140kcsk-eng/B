@@ -45,10 +45,11 @@ Leanコードは、任意の全域関数 f に対して次の定理を証明し�
 したがって、同じ f と同じ seed で評価する限り、GCNはLNGNを厳密に上回ります。さらに、
 
 \[
-\operatorname{GCN}(f)>f(L(f))
+\operatorname{GCN}(f)>f(L(f)),\qquad
+\operatorname{GCN}(f)\ge 2^{L(f)+1}
 \]
 
-も証明対象です。fの単調性は仮定しません。E_f(n)がnとf(n)の両方を厳密に超えるように設計したためです。
+も証明します。後者は、少なくともLNGNの値を指数に使った指数関数までGCNが到達することを示します。fの単調性は仮定しません。E_f(n)がnとf(n)の両方を厳密に超えるように設計したためです。
 
 ## 重要な定義上の留保
 
@@ -72,6 +73,7 @@ LNGN自体について、Googology Wikiの一覧は2026年時点でもwell-defin
 ## ディレクトリ
 
 - GardenCanopy.lean — 算術的定義と一般大小定理
+- PROOF_SKETCH.md — 高校数学レベルの証明骨子
 - LNGN_SPEC.md — LNGNの公開定義、前提、意味論上の未解決点
 - FORMALIZATION_STATUS.md — 証明状況と長期タスク
 - lakefile.toml / lean-toolchain — 再現可能なLeanプロジェクト設定
@@ -87,4 +89,4 @@ LNGN自体について、Googology Wikiの一覧は2026年時点でもwell-defin
 
 ## 検証
 
-Leanのバージョンは安定版としてLean 4.35.0を固定しています。GitHub Actionsでビルドし、成功したrunのSHA・ログを別途確認するまでは「CI検証済み」とは表示しません。
+Leanのバージョンは安定版としてLean 4.35.0を固定しています。GitHub ActionsではLean 4.35.0のlake build --wfailに加え、プロジェクト名前空間の公理依存をaxiom-auditで検査します。成功したrunのSHA・ログと対象コミットを必ず対応づけます。
