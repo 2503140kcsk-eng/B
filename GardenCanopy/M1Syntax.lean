@@ -223,4 +223,175 @@ example : encodeSequence [3, 2, 5] =
     Nat.nth_prime_one_eq_three, Nat.nth_prime_two_eq_five,
     Nat.nth_prime_three_eq_seven]
 
+
+/-! ## Prime-factorization proof of the sequence-code round trip -/
+
+/-- The Finsupp exponent vector encoded by the tail of a source sequence. -/
+def sequenceFactorization (i : Nat) : List Nat → (Nat →₀ Nat)
+  | [] => 0
+  | a :: xs =>
+      Finsupp.single (sourcePrime (i + 1)) a +
+        sequenceFactorization (i + 1) xs
+
+theorem sequencePayloadAux_pos (i : Nat) :
+    ∀ xs : List Nat, 0 < sequencePayloadAux i xs := by
+  intro xs
+  induction xs generalizing i with
+  | nil =>
+      simp [sequencePayloadAux]
+  | cons a xs ih =>
+      have hp : 0 < sourcePrime (i + 1) :=
+        (sourcePrime_prime (i + 1)).pos
+      simp only [sequencePayloadAux]
+      exact Nat.mul_pos (pow_pos hp a) (ih (i + 1))
+
+theorem sequencePayload_pos (xs : List Nat) :
+    0 < sequencePayload xs := by
+  exact sequencePayloadAux_pos 0 xs
+
+theorem sequencePayloadAux_factorization (i : Nat) :
+    ∀ xs : List Nat,
+      (sequencePayloadAux i xs).factorization = sequenceFactorization i xs := by
+  intro xs
+  induction xs generalizing i with
+  | nil =>
+      simp [sequencePayloadAux, sequenceFactorization]
+  | cons a xs ih =>
+      have hp : (sourcePrime (i + 1)).Prime := sourcePrime_prime (i + 1)
+      have hpow : sourcePrime (i + 1) ^ a ≠ 0 :=
+        pow_ne_zero _ hp.ne_zero
+      have htail : sequencePayloadAux (i + 1) xs ≠ 0 :=
+        (sequencePayloadAux_pos (i + 1) xs).ne'
+      change
+        (sourcePrime (i + 1) ^ a * sequencePayloadAux (i + 1) xs).factorization =
+          Finsupp.single (sourcePrime (i + 1)) a +
+            sequenceFactorization (i + 1) xs
+      rw [Nat.factorization_mul hpow htail, hp.factorization_pow, ih (i + 1)]
+
+theorem sequencePayload_factorization (xs : List Nat) :
+    (sequencePayload xs).factorization = sequenceFactorization 0 xs := by
+  exact sequencePayloadAux_factorization 0 xs
+
+theorem sequenceFactorization_apply_below_start
+    (i : Nat) (xs : List Nat) (q : Nat)
+    (hq : q ≤ sourcePrime i) :
+    sequenceFactorization i xs q = 0 := by
+  induction xs generalizing i q with
+  | nil =>
+      simp [sequenceFactorization]
+  | cons a xs ih =>
+      have hlt : sourcePrime i < sourcePrime (i + 1) :=
+        sourcePrime_strictMono (Nat.lt_succ_self i)
+      have hne : q ≠ sourcePrime (i + 1) :=
+        ne_of_lt (lt_of_le_of_lt hq hlt)
+      have hq' : q ≤ sourcePrime (i + 1) :=
+        le_trans hq hlt.le
+      simp [sequenceFactorization, Finsupp.single_apply, hne,
+        ih (i + 1) q hq']
+
+theorem sequenceFactorization_apply_index
+    (i : Nat) (xs : List Nat) (j : Nat) (hj : j < xs.length) :
+    sequenceFactorization i xs (sourcePrime (i + j + 1)) = xs[j] := by
+  induction xs generalizing i j with
+  | nil =>
+      simp at hj
+  | cons a xs ih =>
+      cases j with
+      | zero =>
+          have htail :
+              sequenceFactorization (i + 1) xs (sourcePrime (i + 1)) = 0 :=
+            sequenceFactorization_apply_below_start
+              (i + 1) xs (sourcePrime (i + 1)) le_rfl
+          simp [sequenceFactorization, Finsupp.single_apply, htail]
+      | succ j =>
+          have hj' : j < xs.length := by simpa using hj
+          have htail := ih (i + 1) j hj'
+          have hne : sourcePrime (i + (j + 1) + 1) ≠ sourcePrime (i + 1) := by
+            apply ne_of_gt
+            apply sourcePrime_strictMono
+            omega
+          simp [sequenceFactorization, Finsupp.single_apply, hne,
+            Nat.add_assoc, Nat.add_left_comm, Nat.add_comm, htail]
+
+theorem encodeSequence_add_one (xs : List Nat) :
+    encodeSequence xs + 1 = 2 ^ xs.length * sequencePayload xs := by
+  unfold encodeSequence
+  have hp2 : 0 < 2 := by omega
+  have hprod : 0 < 2 ^ xs.length * sequencePayload xs :=
+    Nat.mul_pos (pow_pos hp2 xs.length) (sequencePayload_pos xs)
+  exact Nat.sub_add_cancel (Nat.succ_le_of_lt hprod)
+
+theorem encodeSequence_factorization (xs : List Nat) :
+    (encodeSequence xs + 1).factorization =
+      Finsupp.single 2 xs.length + sequenceFactorization 0 xs := by
+  rw [encodeSequence_add_one xs]
+  have hpow : 2 ^ xs.length ≠ 0 := by positivity
+  have hpayload : sequencePayload xs ≠ 0 :=
+    (sequencePayload_pos xs).ne'
+  rw [Nat.factorization_mul hpow hpayload]
+  rw [Nat.Prime.factorization_pow (by norm_num : Nat.Prime 2)]
+  rw [sequencePayload_factorization]
+  rfl
+
+theorem encodeSequence_factorization_two (xs : List Nat) :
+    (encodeSequence xs + 1).factorization 2 = xs.length := by
+  rw [encodeSequence_factorization]
+  have hbelow :
+      sequenceFactorization 0 xs 2 = 0 := by
+    apply sequenceFactorization_apply_below_start
+    simp [sourcePrime_zero]
+  simp [Finsupp.add_apply, Finsupp.single_apply, hbelow]
+
+theorem encodeSequence_factorization_prime
+    (xs : List Nat) (j : Nat) (hj : j < xs.length) :
+    (encodeSequence xs + 1).factorization (sourcePrime (j + 1)) = xs[j] := by
+  rw [encodeSequence_factorization]
+  have hprime_ne_two : sourcePrime (j + 1) ≠ 2 := by
+    have hlt : sourcePrime 0 < sourcePrime (j + 1) :=
+      sourcePrime_strictMono (by omega)
+    simpa [sourcePrime_zero] using (ne_of_gt hlt)
+  have hvalue :
+      sequenceFactorization 0 xs (sourcePrime (j + 1)) = xs[j] := by
+    simpa using sequenceFactorization_apply_index 0 xs j hj
+  simp [Finsupp.add_apply, Finsupp.single_apply, hprime_ne_two, hvalue]
+
+/-- Encoding followed by candidate decoding recovers the original list. -/
+theorem sequenceCandidate_encode (xs : List Nat) :
+    sequenceCandidate (encodeSequence xs) = xs := by
+  unfold sequenceCandidate
+  rw [encodeSequence_factorization_two]
+  apply List.ext_get
+  · simp
+  · intro i hiRange hiXs
+    simp only [List.getElem_map, List.getElem_range]
+    exact encodeSequence_factorization_prime xs i hiXs
+
+/-- Universal source sequence-code round trip. -/
+theorem decodeSequence_encodeSequence (xs : List Nat) :
+    decodeSequence (encodeSequence xs) = some xs := by
+  simp [decodeSequence, sequenceCandidate_encode]
+
+/-- The source sequence encoder is injective. -/
+theorem encodeSequence_injective : Function.Injective encodeSequence := by
+  intro xs ys h
+  have h' := congrArg decodeSequence h
+  simpa [decodeSequence_encodeSequence] using h'
+
+/-- A natural code is invalid exactly when no finite sequence encodes it. -/
+theorem decodeSequence_eq_none_iff (n : Nat) :
+    decodeSequence n = none ↔ ¬ ∃ xs : List Nat, encodeSequence xs = n := by
+  constructor
+  · intro h hExists
+    obtain ⟨xs, hxs⟩ := hExists
+    subst n
+    rw [decodeSequence_encodeSequence] at h
+    contradiction
+  · intro h
+    cases hd : decodeSequence n with
+    | none => rfl
+    | some xs =>
+        apply h
+        exact ⟨xs, decodeSequence_sound hd⟩
+
+
 end GardenCanopy.M1Syntax
