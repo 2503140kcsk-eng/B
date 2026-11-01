@@ -246,4 +246,87 @@ theorem parameterFiber_finite_of_injective {D : Type u}
     rw [heq]
     exact Set.finite_empty
 
+
+/-!
+## Sensitivity to arbitrary interpretations of the extra relation symbols
+
+The parameter map is kept fixed below. Only the interpretation of r_(1,0)
+changes. This separates dependence on generic relation symbols from any
+possible collision among the parameter constants.
+-/
+
+/-- An expansion which interprets every generic relation as empty. -/
+def emptyGenericRelations {D : Type u} (M : Expansion D) : Expansion D :=
+  { M with genericRelation := fun _ _ _ => False }
+
+/-- An expansion in which r_(1,0) denotes the singleton predicate x = d. -/
+def singletonR10Relation {D : Type u} (M : Expansion D) (d : D) : Expansion D :=
+  { M with genericRelation := fun arity index args =>
+      arity = 1 ∧ index = 0 ∧ args = [d] }
+
+/-- The fixed formula r_(1,0)(x₀) is false in the empty-relation expansion. -/
+theorem emptyR10_never_satisfied {D : Type u} (M : Expansion D)
+    (σ : Nat → D) :
+    ¬ Satisfies (emptyGenericRelations M) σ r10Formula := by
+  rw [satisfies_r10_iff]
+  simp [emptyGenericRelations]
+
+/-- In the singleton expansion, r_(1,0)(x₀) holds exactly when x₀ = d. -/
+theorem singletonR10_satisfies_iff {D : Type u} (M : Expansion D) (d : D)
+    (σ : Nat → D) :
+    Satisfies (singletonR10Relation M d) σ r10Formula ↔ σ 0 = d := by
+  rw [satisfies_r10_iff]
+  simp [singletonR10Relation]
+
+/-- The singleton interpretation makes r_(1,0)(x₀) uniquely define d. -/
+theorem singletonR10_defines_exactly {D : Type u} (M : Expansion D) (d : D) :
+    DefinesExactly (singletonR10Relation M d) r10Formula := by
+  refine ⟨d, ?_, ?_⟩
+  · intro σ
+    exact singletonR10_satisfies_iff M d σ
+  · intro y hy
+    have hs : Satisfies (singletonR10Relation M d) (fun _ => d) r10Formula := by
+      exact (singletonR10_satisfies_iff M d (fun _ => d)).2 rfl
+    have hEq : d = y := (hy (fun _ => d)).1 hs
+    exact hEq.symm
+
+/-- An empty interpretation cannot make r_(1,0)(x₀) uniquely define anything. -/
+theorem emptyR10_not_defines {D : Type u} (M : Expansion D) :
+    ¬ DefinesExactly (emptyGenericRelations M) r10Formula := by
+  rintro ⟨d, hd, _⟩
+  have hSat : Satisfies (emptyGenericRelations M) (fun _ => d) r10Formula :=
+    (hd (fun _ => d)).2 rfl
+  exact emptyR10_never_satisfied M (fun _ => d) hSat
+
+/-- With a fixed parameter map, the singleton relation makes the chosen m definable. -/
+theorem singletonR10_parameter_definable {D : Type u} (M : Expansion D)
+    (m : Nat) (d : D) (hParam : M.constants m = d) :
+    ParameterDefinable (singletonR10Relation M d) m := by
+  constructor
+  · exact singletonR10_defines_exactly M d
+  · intro σ
+    rw [singletonR10_satisfies_iff]
+    simpa [hParam]
+
+/-- With the same fixed parameter map, the empty relation makes no m definable by this P. -/
+theorem emptyR10_not_parameter_definable {D : Type u} (M : Expansion D)
+    (m : Nat) :
+    ¬ ParameterDefinable (emptyGenericRelations M) m := by
+  intro h
+  exact emptyR10_not_defines M h.1
+
+/--
+A precise local non-invariance theorem: changing only r_(1,0) from empty to
+the singleton {M.constants m} changes whether the same formula and parameter
+satisfy the source-style unique-definability predicate.
+-/
+theorem arbitrary_relation_interpretation_changes_Definable
+    {D : Type u} (M : Expansion D) (m : Nat) :
+    ParameterDefinable
+        (singletonR10Relation M (M.constants m)) m ∧
+      ¬ ParameterDefinable (emptyGenericRelations M) m := by
+  constructor
+  · exact singletonR10_parameter_definable M m (M.constants m) rfl
+  · exact emptyR10_not_parameter_definable M m
+
 end GardenCanopy.M1Semantics
