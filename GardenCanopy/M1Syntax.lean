@@ -365,7 +365,6 @@ theorem sequenceCandidate_encode (xs : List Nat) :
   apply List.ext_getElem
   · simp
   · intro i hiRange hiXs
-    simp only [List.getElem_map, List.getElem_range]
     exact encodeSequence_factorization_prime xs i hiXs
 
 /-- Universal source sequence-code round trip. -/
