@@ -62,7 +62,7 @@ theorem function_value_lt_amplification (f : Nat → Nat) (n : Nat) :
   unfold amplification
   have hmem : f n ≤ prefixMax f n := self_le_prefixMax f n
   have hsucc : prefixMax f n < prefixMax f n + 1 := by
-    simpa using (Nat.lt_succ_self (prefixMax f n))
+    simp
   have hinner :
       prefixMax f n + 1 ≤
         max (2 ^ (n + 1)) (prefixMax f n + 1) :=
@@ -81,7 +81,7 @@ theorem iterate_ge_of_expansive
   induction k with
   | zero =>
       intro n
-      rfl
+      exact Nat.le_refl n
   | succ k ih =>
       intro n
       change n ≤ iterate g k (g n)
