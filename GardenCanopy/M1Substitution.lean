@@ -40,7 +40,7 @@ mutual
       (fun s acc => s ∪ acc) ∅
 end
 
-/-- Shape-only size of a term, ignoring the numerical values of variable names. -/
+/- Shape-only size of a term, ignoring the numerical values of variable names. -/
 mutual
   def termNodes (t : Term) : Nat :=
     match t with
@@ -83,6 +83,7 @@ mutual
     ts.attach.map (fun ⟨t, _ht⟩ => substituteTermAux x replacement rho active t)
 end
 
+/--
 Capture-avoiding substitution of the term replacement for free occurrences of x.
 The renaming environment records alpha-renamings of binders already traversed.
 The freshness index is exactly the least index absent from the current formula,
@@ -123,7 +124,7 @@ noncomputable def substituteFormulaAux (x : Nat) (replacement : Term)
 termination_by formulaNodes P
 decreasing_by
   all_goals
-    simp [formulaNodes]
+    simp [formulaNodes] <;> omega
 
 /-- Source-style one-variable capture-avoiding substitution. -/
 noncomputable def substituteFormula (P : Formula) (replacement : Term) (x : Nat) : Formula :=
