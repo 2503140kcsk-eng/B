@@ -61,6 +61,30 @@ theorem boundedCandidateSet_finite
   intro p hp
   exact pairParameterFiber_finite parameter defines hUnique hFiber i p
 
+/-- Injectivity of a map from Nat makes each point-preimage finite. -/
+theorem parameterFiber_finite_of_injective
+    (parameter : Nat → D) (hInjective : Function.Injective parameter)
+    (d : D) :
+    {m : Nat | parameter m = d}.Finite := by
+  by_cases h : ∃ m, parameter m = d
+  · obtain ⟨m₀, hm₀⟩ := h
+    have heq : {m : Nat | parameter m = d} = {m₀} := by
+      ext m
+      simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff]
+      constructor
+      · intro hm
+        exact hInjective (hm.trans hm₀.symm)
+      · rintro rfl
+        exact hm₀
+    rw [heq]
+    exact Set.finite_singleton m₀
+  · have heq : {m : Nat | parameter m = d} = ∅ := by
+      ext m
+      simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
+      exact fun hm => h ⟨m, hm⟩
+    rw [heq]
+    exact Set.finite_empty
+
 /--
 Injectivity of the natural parameter map is a sufficient condition for the
 finite-fiber hypothesis, and hence for the bounded candidate set to be finite.
@@ -73,7 +97,6 @@ theorem boundedCandidateSet_finite_of_injective
     (boundedCandidateSet parameter defines n codes).Finite := by
   apply boundedCandidateSet_finite parameter defines hUnique
   intro d
-  exact GardenCanopy.M1Semantics.parameterFiber_finite_of_injective
-    parameter hInjective d
+  exact parameterFiber_finite_of_injective parameter hInjective d
 
 end GardenCanopy.M1FiniteSum
