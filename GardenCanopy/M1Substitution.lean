@@ -97,7 +97,7 @@ noncomputable def substituteFormulaAux (x : Nat) (replacement : Term)
   | .implication A B =>
       .implication
         (substituteFormulaAux x replacement freshUsed rho active A)
-        (substituteFormulaAux x replacement forbidden rho active B)
+        (substituteFormulaAux x replacement freshUsed rho active B)
   | .negation A =>
       .negation (substituteFormulaAux x replacement freshUsed rho active A)
   | .existsQuantifier i A =>
