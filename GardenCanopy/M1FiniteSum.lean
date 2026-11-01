@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Data.Set.Finite.Lattice
+public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 public section
 
