@@ -37,7 +37,6 @@ mutual
   termination_by sizeOf t
   decreasing_by
     simp_wf
-    omega
 
   def termsVars (ts : List Term) : Finset Nat :=
     match ts with
@@ -66,6 +65,7 @@ mutual
   termination_by sizeOf ts
   decreasing_by
     simp_wf
+    omega
 end
 
 /-- Every variable index occurring in a formula, including bound indices. -/
@@ -107,6 +107,7 @@ mutual
   termination_by sizeOf ts
   decreasing_by
     simp_wf
+    omega
 end
 
 /--
@@ -145,7 +146,7 @@ noncomputable def substituteFormulaAux (x : Nat) (replacement : Term)
 termination_by formulaNodes P
 decreasing_by
   all_goals
-    simp [formulaNodes] <;> omega
+    simp [formulaNodes]
 
 /-- Source-style one-variable capture-avoiding substitution. -/
 noncomputable def substituteFormula (P : Formula) (replacement : Term) (x : Nat) : Formula :=
