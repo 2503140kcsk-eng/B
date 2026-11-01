@@ -286,8 +286,7 @@ theorem sequenceFactorization_apply_below_start
         ne_of_lt (lt_of_le_of_lt hq hlt)
       have hq' : q ≤ sourcePrime (i + 1) :=
         le_trans hq hlt.le
-      simp [sequenceFactorization, Finsupp.single_apply, hne,
-        ih (i + 1) q hq']
+      simp [sequenceFactorization, hne, ih (i + 1) q hq']
 
 theorem sequenceFactorization_apply_index
     (i : Nat) (xs : List Nat) (j : Nat) (hj : j < xs.length) :
@@ -302,16 +301,18 @@ theorem sequenceFactorization_apply_index
               sequenceFactorization (i + 1) xs (sourcePrime (i + 1)) = 0 :=
             sequenceFactorization_apply_below_start
               (i + 1) xs (sourcePrime (i + 1)) le_rfl
-          simp [sequenceFactorization, Finsupp.single_apply, htail]
+          simp [sequenceFactorization, htail]
       | succ j =>
           have hj' : j < xs.length := by simpa using hj
-          have htail := ih (i + 1) j hj'
-          have hne : sourcePrime (i + (j + 1) + 1) ≠ sourcePrime (i + 1) := by
-            apply ne_of_gt
+          have htail : sequenceFactorization (i + 1) xs
+              (sourcePrime ((i + 1) + j + 1)) = xs[j] := ih (i + 1) j hj'
+          have hne : sourcePrime (i + 1) ≠ sourcePrime ((i + 1) + j + 1) := by
+            apply ne_of_lt
             apply sourcePrime_strictMono
             omega
-          simp [sequenceFactorization, Finsupp.single_apply, hne,
-            Nat.add_assoc, Nat.add_left_comm, Nat.add_comm, htail]
+          have hindex : i + (j + 1) + 1 = (i + 1) + j + 1 := by omega
+          rw [hindex]
+          simp [sequenceFactorization, hne, htail]
 
 theorem encodeSequence_add_one (xs : List Nat) :
     encodeSequence xs + 1 = 2 ^ xs.length * sequencePayload xs := by
@@ -339,7 +340,7 @@ theorem encodeSequence_factorization_two (xs : List Nat) :
       sequenceFactorization 0 xs 2 = 0 := by
     apply sequenceFactorization_apply_below_start
     simp [sourcePrime_zero]
-  simp [Finsupp.add_apply, Finsupp.single_apply, hbelow]
+  simp [Finsupp.add_apply, hbelow]
 
 theorem encodeSequence_factorization_prime
     (xs : List Nat) (j : Nat) (hj : j < xs.length) :
@@ -352,12 +353,14 @@ theorem encodeSequence_factorization_prime
   have hvalue :
       sequenceFactorization 0 xs (sourcePrime (j + 1)) = xs[j] := by
     simpa using sequenceFactorization_apply_index 0 xs j hj
-  simp [Finsupp.add_apply, Finsupp.single_apply, hprime_ne_two, hvalue]
+  simp [Finsupp.add_apply, hprime_ne_two, hvalue]
 
 /-- Encoding followed by candidate decoding recovers the original list. -/
 theorem sequenceCandidate_encode (xs : List Nat) :
     sequenceCandidate (encodeSequence xs) = xs := by
-  dsimp [sequenceCandidate]
+  change
+    (List.range ((encodeSequence xs + 1).factorization 2)).map
+      (fun i => (encodeSequence xs + 1).factorization (sourcePrime (i + 1))) = xs
   rw [encodeSequence_factorization_two]
   apply List.ext_get
   · simp
