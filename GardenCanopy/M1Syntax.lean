@@ -116,11 +116,13 @@ inductive FunctionSymbol : Nat → Type
   | unaryU : FunctionSymbol 1
   | theta : FunctionSymbol 1
   | generic (arity index : Nat) : FunctionSymbol arity
+  deriving DecidableEq, Repr
 
 /-- Relation symbols indexed by their arity. -/
 inductive RelationSymbol : Nat → Type
   | membership : RelationSymbol 2
   | generic (arity index : Nat) : RelationSymbol arity
+  deriving DecidableEq, Repr
 
 /--
 Terms use named natural-number variables, matching the author's xᵢ convention.
@@ -128,7 +130,7 @@ The arity index in app is enforced by a dependent vector.
 -/
 inductive Term where
   | variable (index : Nat)
-  | parameter (index : Nat)
+  | constant (index : Nat)
   | app {arity : Nat} (f : FunctionSymbol arity) (args : Vector Term arity)
   deriving Repr
 
@@ -137,13 +139,13 @@ inductive Formula where
   | falsum
   | implication (left right : Formula)
   | negation (body : Formula)
-  | exists (index : Nat) (body : Formula)
+  | existsQuantifier (index : Nat) (body : Formula)
   | relation {arity : Nat} (r : RelationSymbol arity) (args : Vector Term arity)
   deriving Repr
 
 def Term.containsTheta : Term → Bool
   | .variable _ => false
-  | .parameter _ => false
+  | .constant _ => false
   | .app .theta _ => true
   | .app .unaryU args => args.toList.any Term.containsTheta
   | .app (.generic _ _) args => args.toList.any Term.containsTheta
