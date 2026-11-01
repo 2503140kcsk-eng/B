@@ -1,7 +1,6 @@
 module
 
 import GardenCanopy.M1Syntax
-import Mathlib.Data.Set.Finite
 
 namespace GardenCanopy.M1Semantics
 
