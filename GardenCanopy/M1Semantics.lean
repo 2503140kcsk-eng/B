@@ -1,7 +1,8 @@
 module
 
 import GardenCanopy.M1Syntax
-import Mathlib.Data.Set.Lattice
+import Mathlib.Data.Set.Basic
+import Mathlib.Data.Set.Finite.Basic
 
 public section
 
@@ -79,8 +80,6 @@ end
 /-- Tarskian satisfaction, relative to an expansion and variable assignment. -/
 inductive Satisfies {D : Type u} (M : Expansion D) :
     (Nat → D) → GardenCanopy.M1Syntax.Formula → Prop where
-  | falsum (σ : Nat → D) :
-      Satisfies M σ GardenCanopy.M1Syntax.Formula.falsum → False
   | implication {σ : Nat → D} {A B : GardenCanopy.M1Syntax.Formula}
       (h : Satisfies M σ A → Satisfies M σ B) :
       Satisfies M σ (GardenCanopy.M1Syntax.Formula.implication A B)
