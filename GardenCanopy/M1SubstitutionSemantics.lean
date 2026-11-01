@@ -23,8 +23,10 @@ mutual
         obtain ⟨values, hValues⟩ := termsEval_exists M σ args
         exact ⟨functionInterpretation M f values, TermEval.app hValues⟩
     termination_by t => sizeOf t
-    decreasing_by all_goals simp_wf
-      try omega
+    decreasing_by
+      all_goals
+        simp_wf
+        try omega
 
   theorem termsEval_exists {D : Type u} (M : Expansion D) (σ : Nat → D) :
       ∀ ts : List Term, ∃ values : List D, TermsEval M σ ts values
@@ -34,7 +36,10 @@ mutual
         obtain ⟨values, hValues⟩ := termsEval_exists M σ ts
         exact ⟨value :: values, TermsEval.cons hValue hValues⟩
     termination_by ts => sizeOf ts
-    decreasing_by all_goals simp_wf
+    decreasing_by
+      all_goals
+        simp_wf
+        try omega
 end
 
 /- The evaluation relation assigns at most one value to a term. -/
